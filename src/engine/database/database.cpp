@@ -1,13 +1,12 @@
-#include "../engine/database.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-
-#include "../engine/exit.h"
-#include "envirment.h"
+#include "exit.h"
 #include "logger.h"
+#include "database.h"
+#include "envirment.h"
+
 
 static int MAX_SQL_CONNECTION = 256;
 static pthread_mutex_t * s_sql_lock;

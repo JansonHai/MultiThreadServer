@@ -5,11 +5,11 @@
 #include <unistd.h>
 #include <errno.h>
 #include <time.h>
-#include "global.h"
 #include "exit.h"
+#include "global.h"
 #include "server.h"
-#include "system/envirment.h"
-#include "system/logger.h"
+#include "logger.h"
+#include "envirment.h"
 
 static void signal_handler(int s)
 {

@@ -1,5 +1,3 @@
-#include "../engine/handler.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,10 +8,10 @@
 #include <pthread.h>
 #include <sys/wait.h>
 #include <mysql/mysql.h>
-
-#include "../engine/exit.h"
-#include "../engine/global.h"
+#include "exit.h"
+#include "global.h"
 #include "logger.h"
+#include "handler.h"
 #include "envirment.h"
 
 static struct handle_context context;

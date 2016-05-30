@@ -1,4 +1,4 @@
-#include "../engine/hotfix.h"
+#include "hotfix.h"
 
 void fl_hotfix_init()
 {

@@ -1,13 +1,11 @@
-#include "../engine/exit.h"
-
 #include <vector>
 #include <malloc.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
-
-#include "../engine/global.h"
+#include "exit.h"
+#include "global.h"
 
 struct fl_exit_handle
 {
