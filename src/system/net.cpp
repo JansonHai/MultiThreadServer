@@ -1,5 +1,3 @@
-#include "../system/net.h"
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -8,10 +6,10 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <errno.h>
-
-#include "../system/logger.h"
-#include "global.h"
+#include "net.h"
 #include "exit.h"
+#include "logger.h"
+#include "global.h"
 
 extern int MAX_CLIENT_CONNECTIONS;
 extern int * g_client_conn_fds;
