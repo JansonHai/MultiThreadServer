@@ -6,10 +6,10 @@
 #include <errno.h>
 #include <time.h>
 #include "global.h"
-#include "logger.h"
-#include "envirment.h"
 #include "exit.h"
 #include "server.h"
+#include "system/envirment.h"
+#include "system/logger.h"
 
 static void signal_handler(int s)
 {

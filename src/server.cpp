@@ -15,12 +15,12 @@
 #include <fcntl.h>
 #include "server.h"
 #include "global.h"
-#include "logger.h"
-#include "envirment.h"
 #include "exit.h"
 #include "handler.h"
 #include "database.h"
-#include "net.h"
+#include "system/envirment.h"
+#include "system/logger.h"
+#include "system/net.h"
 
 static int listen_fd = -1;
 static int s_session = 0;
