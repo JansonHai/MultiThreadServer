@@ -1,7 +1,7 @@
-OBJS = $(shell ls | grep *.o$)
+OBJS = $(shell ls | grep .o$)
 
 all:server
 
 server:$(OBJS)
-	$(CC) $(CCFLAG) -o $(BIN_DIR)/server
+	$(CC) $(CCFLAG) $(OBJS) -o $(BIN_DIR)/server
 
