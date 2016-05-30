@@ -1,5 +1,5 @@
 CC = g++
-CCFLAG = -Wall -lpthread -lmysqlclient -L/usr/lib64/mysql/
+CCFLAG = -Wall -lpthread -lmysqlclient -I./header -L/usr/lib64/mysql/ 
 ROOT_DIR = $(shell pwd)
 SUBDIRS=$(shell ls -l | grep ^d | awk '{if ($$9 == "src") print $$9}')
 OBJS_DIR = $(ROOT_DIR)/objs

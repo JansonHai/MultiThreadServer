@@ -1,57 +1,39 @@
 CC = g++
-CFLAGS = -Wall -lpthread -lmysqlclient -L/usr/lib64/mysql/
-ROOT = .
-OBJPATH = $(ROOT)/objs
-SERVEROBJS = $(OBJPATH)/main.o $(OBJPATH)/logger.o $(OBJPATH)/envirment.o \
-$(OBJPATH)/global.o $(OBJPATH)/server.o $(OBJPATH)/hotfix.o $(OBJPATH)/exit.o \
-$(OBJPATH)/handler.o $(OBJPATH)/database.o $(OBJPATH)/net.o
+CCFLAG = -Wall -lpthread -lmysqlclient -I./header -L/usr/lib64/mysql/ 
+ROOT_DIR = $(shell pwd)
+SUBDIRS=$(shell ls -l | grep ^d | awk '{if ($$9 == "src") print $$9}')
+OBJS_DIR = $(ROOT_DIR)/objs
+BIN_DIR = $(ROOT_DIR)/bin
+#获取当前目录下的cpp文件集，放在变量CUR_SOURCE中
+CUR_SOURCE=${wildcard *.cpp}
+#将对应的cpp文件名转为o文件后放在下面的CUR_OBJS变量中
+CUR_OBJS=${patsubst %.cpp, %.o, $(CUR_SOURCE)}
 
-all : server client client2
+export CC CCFLAG ROOT_DIR SUBDIRS OBJS_DIR BIN_DIR
 
-server : $(SERVEROBJS)
-	$(CC) $(CFLAGS) $(SERVEROBJS) -o server
-	
-$(OBJPATH)/main.o : main.cpp 
-	$(CC) $(CFLAGS) -c main.cpp -o $(OBJPATH)/main.o
-	
-$(OBJPATH)/logger.o : logger.cpp
-	$(CC) $(CFLAGS) -c logger.cpp -o $(OBJPATH)/logger.o
-	
-$(OBJPATH)/envirment.o : envirment.cpp
-	$(CC) $(CFLAGS) -c envirment.cpp -o $(OBJPATH)/envirment.o
+all : echo_objects $(SUBDIRS) $(CUR_OBJS) server
 
-$(OBJPATH)/server.o : server.cpp
-	$(CC) $(CFLAGS) -c server.cpp -o $(OBJPATH)/server.o
-	
-$(OBJPATH)/global.o : global.cpp
-	$(CC) $(CFLAGS) -c global.cpp -o $(OBJPATH)/global.o
+echo_objects:
+	@echo $(CUR_OBJS)
 
-$(OBJPATH)/hotfix.o : hotfix.cpp
-	$(CC) $(CFLAGS) -c hotfix.cpp -o $(OBJPATH)/hotfix.o
-	
-$(OBJPATH)/exit.o : exit.cpp
-	$(CC) $(CFLAGS) -c exit.cpp -o $(OBJPATH)/exit.o
+$(SUBDIRS):echo
+	make -C $@
+    
+$(CUR_OBJS):%o:%cpp
+	$(CC) $(CCFLAG) -c $^ -o $(OBJS_DIR)/$@
+    
+echo:
+	@echo $(SUBDIRS)
+    
+server:$(OBJS_DIR)/*.o
+	$(CC) $(CCFLAG) $(CUR_OBJS)/*.o -o $(BIN_DIR)/server
 
-$(OBJPATH)/handler.o : handler.cpp
-	$(CC) $(CFLAGS) -c handler.cpp -o $(OBJPATH)/handler.o
-
-$(OBJPATH)/database.o : database.cpp
-	$(CC) $(CFLAGS) -c database.cpp -o $(OBJPATH)/database.o
+client:$(ROOT_DIR)/client_test/client.cpp
+	$(CC) $(CCFLAG) $(ROOT_DIR)/client_test/client.cpp -o $(BIN_DIR)/client
 	
-$(OBJPATH)/net.o : net.cpp
-	$(CC) $(CFLAGS) -c net.cpp -o $(OBJPATH)/net.o
-	
-client : $(OBJPATH)/client.o
-	$(CC) $(CFLAGS) $(OBJPATH)/client.o -o client
-	
-$(OBJPATH)/client.o : client.cpp
-	$(CC) $(CFLAGS) -c client.cpp -o $(OBJPATH)/client.o
-	
-client2 : $(OBJPATH)/client2.o
-	$(CC) $(CFLAGS) $(OBJPATH)/client2.o -o client2
-	
-$(OBJPATH)/client2.o : client2.cpp
-	$(CC) $(CFLAGS) -c client2.cpp -o $(OBJPATH)/client2.o
+client2:$(ROOT_DIR)/client_test/client2.cpp
+	$(CC) $(CCFLAG) $(ROOT_DIR)/client_test/client2.cpp -o $(BIN_DIR)/client2
 	
 clean:
-	rm -f $(OBJPATH)/*.o server client
+	rm -f $(OBJS_DIR)/*.o
+	rm -f $(BIN_DIR)/*
