@@ -9,7 +9,7 @@ all:$(SUBDIRS) $(CUR_OBJS)
 $(SUBDIRS):ECHO
 	make -C $@
 	
-$(CUR_OBJS):%.o:%.cpp
+$(CUR_OBJS):$(OBJS_DIR)/%.o:%.cpp
 	$(CC) $(CCFLAG) -c $^ -o $(OBJS_DIR)/$@
 	
 ECHO:
