@@ -27,8 +27,8 @@ $(CUR_OBJS):%o:%cpp
 echo:
 	@echo $(SUBDIRS)
     
-server:$(OBJS_DIR)/*.o
-	$(CC) $(CCFLAG) $(CUR_OBJS)/*.o -o $(BIN_DIR)/server
+server:
+	make -C $(OBJS_DIR)
 
 client:$(ROOT_DIR)/client_test/client.cpp
 	$(CC) $(CCFLAG) $(ROOT_DIR)/client_test/client.cpp -o $(BIN_DIR)/client
