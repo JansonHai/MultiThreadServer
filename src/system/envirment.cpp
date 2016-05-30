@@ -111,7 +111,7 @@ bool fl_load_config(const char * configName)
 		fprintf(stderr,"open config file %s failed\n",configName);
 		return false;
 	}
-	char str[512] , key[256] , value[256];
+	char str[2048] , key[1024] , value[1024];
 	int i = 0 , maxlen = 0;
 	bool isKeyOk;
 	char * ch;
@@ -147,7 +147,7 @@ bool fl_load_config(const char * configName)
 			}
 			key[i++] = *ch++;
 		}
-		key[i++] = 0;
+		key[i++] = '\0';
 
 		//check the config pair is or not only have the key,but no value
 		if (false == isKeyOk)
@@ -170,7 +170,7 @@ bool fl_load_config(const char * configName)
 			if ('#' == *ch) break;
 			value[i++] = *ch++;
 		}
-		value[i++] = 0;
+		value[i++] = '\0';
 
 		//check the value is or not empty
 		if (0 == strlen(value))
@@ -180,7 +180,21 @@ bool fl_load_config(const char * configName)
 			return false;
 		}
 
-		fl_setenv(key, value);
+		if ('@' == key[0])
+		{
+			//this line means a config file, load it
+			if (false == fl_load_config(value))
+			{
+				fclose(cf);
+				return false;
+			}
+		}
+		else
+		{
+			//key value pairs, set it
+			fl_setenv(key, value);
+		}
+
 	}
 	fclose(cf);
 	return true;
