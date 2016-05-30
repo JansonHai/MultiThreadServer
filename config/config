@@ -1,0 +1,22 @@
+#配置说明
+#login_server_port 登录服务监听端口,默认: 6666
+#gate_server_port 网关服务监听端口,默认: 7777
+#log_path log的目录, 默认: ./server.log
+#max_database_connection 数据库连接池的最大连接数，默认: 256
+#max_client_connection 最大客户端连接数，默认: 2048
+#read_thread_num 数据读取线程，默认: 16
+#work_thread_num 工作线程数，默认: 256
+#message_max_length 客户端数据包最大长度,默认: 2M，即2097152
+
+login_server_port = 6666
+gate_server_port = 7777
+log_path = ./log/server.log
+max_database_connection = 256
+max_client_connection = 2048
+read_thread_num = 16
+work_thread_num = 16
+message_max_length = 2097152    #2M
+
+
+#开头是@的行表示再包含一个配置文件,此时键命会被忽略，只关心值
+#例如：@sub_config = xxoo
