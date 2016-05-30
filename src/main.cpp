@@ -45,6 +45,7 @@ int main(int argc, char* argv[])
 
 	fl_logger_init();
 
+
 	fprintf(stdout,"server start,pid = %d\n",getpid());
 	fl_log(0,"\n\n===============================================================\n\n");
 	fl_log(0,"server start,pid = %d\n",getpid());
