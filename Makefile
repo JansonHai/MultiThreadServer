@@ -27,6 +27,12 @@ echo:
     
 server:$(OBJS_DIR)/*.o
 	$(CC) $(CCFLAG) $(CUR_OBJS)/*.o -o $(BIN_DIR)/server
+
+client:$(ROOT_DIT)/client_test/client.cpp
+	$(CC) $(CCFLAG) $(ROOT_DIT)/client_test/client.cpp -o $(BIN_DIR)/client
+	
+client2:$(ROOT_DIT)/client2.cpp
+	$(CC) $(CCFLAG) $(ROOT_DIT)/client_test/client2.cpp -o $(BIN_DIR)/client2
 	
 clean:
 	rm -f $(OBJS_DIR)/*.o
