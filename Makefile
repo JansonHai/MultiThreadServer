@@ -21,7 +21,7 @@ echo_objects:
 $(SUBDIRS):echo
 	make -C $@
     
-$(CUR_OBJS):%o:%cpp
+$(CUR_OBJS):$(OBJS_DIR)/%o:%cpp
 	$(CC) $(CCFLAG) -c $^ -o $(OBJS_DIR)/$@
     
 echo:
