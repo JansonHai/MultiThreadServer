@@ -29,20 +29,19 @@ bool fl_start_net_gate_server()
 		return false;
 	}
 
-	if (0 == s_gate_pid)
-	{
-		//child close write
-		close(s_gate_pipe[1]);
-		s_run_state = true;
-		s_start_net_gate_logic();
-		_exit(0);
-	}
-	else
+	if (s_gate_pid > 0)
 	{
 		//parent close read
-		fl_log(2,"fork gate child process successfully,child pid = %d\n", s_gate_pid);
+		fl_log(2,"fork gate child process successfully,pid = %d\n", s_gate_pid);
 		close(s_gate_pipe[0]);
+		return true;
 	}
+
+	//child close write
+	close(s_gate_pipe[1]);
+	s_run_state = true;
+	s_start_net_gate_logic();
+	_exit(0);
 	return true;
 }
 

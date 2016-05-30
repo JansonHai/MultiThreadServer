@@ -9,7 +9,6 @@
 #define MAX_BUFF_LEN 4096
 
 struct fl_connection_info {
-//    user_t *ob; /* 指向处理服务器端逻辑的结构 */
     int fd; /* socket连接 */
     struct sockaddr_in addr; /* 连接的地址信息 */
     char text[MAX_BUFF_LEN]; /* 接收的消息缓冲 */
