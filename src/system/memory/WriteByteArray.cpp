@@ -41,7 +41,7 @@ union _UInt64
 
 union _Float
 {
-	char byte[8];
+	char byte[4];
 	float n;
 };
 
@@ -69,13 +69,13 @@ static inline bool s_is_big_endian()
 }
 
 
-ByteArray::ByteArray()
+WriteByteArray::WriteByteArray()
 {
 	m_buffer = NULL;
 	m_size = 0;
 }
 
-ByteArray::~ByteArray()
+WriteByteArray::~WriteByteArray()
 {
 	if (NULL != m_buffer)
 	{
@@ -83,7 +83,47 @@ ByteArray::~ByteArray()
 	}
 }
 
-bool ByteArray::WriteInt8(char i8)
+void WriteByteArray::InitBuffer(int size)
+{
+	m_buffer = fl_malloc(size);
+	m_size = 0;
+}
+
+const char * WriteByteArray::GetBuffer()
+{
+	if (NULL != m_buffer)
+	{
+		m_buffer->buffer;
+	}
+	return NULL;
+}
+
+int WriteByteArray::GetArraySize()
+{
+	return m_size;
+}
+
+void WriteByteArray::ReleaseBuffer()
+{
+	fl_free(m_buffer);
+	m_buffer = NULL;
+	m_size = 0;
+}
+
+void WriteByteArray::ResetWrite()
+{
+	m_size = 0;
+}
+
+void WriteByteArray::WriteSeek(int pos)
+{
+	if (pos <= m_buffer->size)
+	{
+		m_size = pos;
+	}
+}
+
+bool WriteByteArray::WriteInt8(char i8)
 {
 	if (m_size + 1 > m_buffer->size)
 	{
@@ -99,7 +139,7 @@ bool ByteArray::WriteInt8(char i8)
 	return true;
 }
 
-bool ByteArray::WriteInt16(int16_t i16)
+bool WriteByteArray::WriteInt16(int16_t i16)
 {
 	if (m_size + 2 > m_buffer->size)
 	{
@@ -126,7 +166,7 @@ bool ByteArray::WriteInt16(int16_t i16)
 	return true;
 }
 
-bool ByteArray::WriteInt32(int32_t i32)
+bool WriteByteArray::WriteInt32(int32_t i32)
 {
 	if (m_size + 4 > m_buffer->size)
 	{
@@ -157,7 +197,7 @@ bool ByteArray::WriteInt32(int32_t i32)
 	return true;
 }
 
-bool ByteArray::WriteInt64(int64_t i64)
+bool WriteByteArray::WriteInt64(int64_t i64)
 {
 	if (m_size + 8 > m_buffer->size)
 	{
@@ -196,7 +236,7 @@ bool ByteArray::WriteInt64(int64_t i64)
 	return true;
 }
 
-bool ByteArray::WriteUInt8(unsigned char ui8)
+bool WriteByteArray::WriteUInt8(unsigned char ui8)
 {
 	if (m_size + 1 > m_buffer->size)
 	{
@@ -212,7 +252,7 @@ bool ByteArray::WriteUInt8(unsigned char ui8)
 	return true;
 }
 
-bool ByteArray::WriteUInt16(uint16_t ui16)
+bool WriteByteArray::WriteUInt16(uint16_t ui16)
 {
 	if (m_size + 2 > m_buffer->size)
 	{
@@ -239,7 +279,7 @@ bool ByteArray::WriteUInt16(uint16_t ui16)
 	return true;
 }
 
-bool ByteArray::WriteUInt32(uint32_t ui32)
+bool WriteByteArray::WriteUInt32(uint32_t ui32)
 {
 	if (m_size + 4 > m_buffer->size)
 	{
@@ -270,7 +310,7 @@ bool ByteArray::WriteUInt32(uint32_t ui32)
 	return true;
 }
 
-bool ByteArray::WriteUInt64(uint64_t ui64)
+bool WriteByteArray::WriteUInt64(uint64_t ui64)
 {
 	if (m_size + 8 > m_buffer->size)
 	{
@@ -309,7 +349,7 @@ bool ByteArray::WriteUInt64(uint64_t ui64)
 	return true;
 }
 
-bool ByteArray::WriteFloat(float f)
+bool WriteByteArray::WriteFloat(float f)
 {
 	if (m_size + 4 > m_buffer->size)
 	{
@@ -340,7 +380,7 @@ bool ByteArray::WriteFloat(float f)
 	return true;
 }
 
-bool ByteArray::WriteDouble(double d)
+bool WriteByteArray::WriteDouble(double d)
 {
 	if (m_size + 8 > m_buffer->size)
 	{
@@ -379,7 +419,7 @@ bool ByteArray::WriteDouble(double d)
 	return true;
 }
 
-bool ByteArray::WriteString(const char * str)
+bool WriteByteArray::WriteString(const char * str)
 {
 	int len = strlen(str) + 1;
 	if (m_size + len + 4 > m_buffer->size)
@@ -399,35 +439,3 @@ bool ByteArray::WriteString(const char * str)
 	m_size += len;
 	return true;
 }
-
-void ByteArray::InitBuffer(int size)
-{
-	m_buffer = fl_malloc(size);
-	m_size = 0;
-}
-
-const char * ByteArray::GetBuffer()
-{
-	if (NULL != m_buffer)
-	{
-		m_buffer->buffer;
-	}
-	return NULL;
-}
-
-int ByteArray::GetSize()
-{
-	return m_size;
-}
-
-void ByteArray::ReleaseBuffer()
-{
-	fl_free(m_buffer);
-	m_buffer = NULL;
-	m_size = 0;
-}
-
-
-
-
-
