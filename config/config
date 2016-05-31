@@ -20,3 +20,5 @@ message_max_length = 2097152    #2M
 
 #开头是@的行表示再包含一个配置文件,此时键命会被忽略，只关心值
 #例如：@sub_config = xxoo
+
+@sub_config = config_buffer

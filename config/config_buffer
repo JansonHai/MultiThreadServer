@@ -1,0 +1,9 @@
+buffer_1k_num = 4096
+buffer_2k_num = 4096
+buffer_4k_num = 2048
+buffer_8k_num = 1024
+buffer_16k_num = 256
+buffer_32k_num = 128
+buffer_64k_num = 128
+buffer_128k_num = 64
+buffer_256k_num = 64
