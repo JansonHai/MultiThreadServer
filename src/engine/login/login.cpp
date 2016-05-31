@@ -9,12 +9,21 @@
 #include <arpa/inet.h>
 #include "login.h"
 #include "logger.h"
+#include "buffer.h"
+#include "ByteArray.h"
 
 static int s_listen_fd = -1;
 static uint32_t s_session = 0;
 static int s_login_server_pid = -1;
+static int s_run_state = 0;
 
 void s_login_server_loop();
+
+void fl_stop_login_server()
+{
+	s_run_state = 0;
+	_exit(0);
+}
 
 bool fl_start_login_server()
 {
@@ -37,7 +46,7 @@ bool fl_start_login_server()
 	if (-1 == s_listen_fd)
 	{
 		fl_log(2, "login server socket failed, errno:%d\n", errno);
-		_exit(0);
+		fl_stop_login_server()
 	}
 
 	//set server information
@@ -54,14 +63,14 @@ bool fl_start_login_server()
 	if (-1 == (bind(s_listen_fd,(struct sockaddr*)&server_addr,sizeof(struct sockaddr))))
 	{
 		fl_log(2, "login server bind error, errno:%d\n", errno);
-		_exit(0);
+		fl_stop_login_server()
 	}
 
 	//listen server
 	if (-1 == listen(s_listen_fd, 1024))
 	{
 		fl_log(2, "login server listen error, errno:%d\n", errno);
-		_exit(0);
+		fl_stop_login_server()
 	}
 
 	char * addr_tmp;
@@ -72,7 +81,7 @@ bool fl_start_login_server()
 	fl_log(0,"login server listen on %s : %d\n", addr_tmp, port_tmp);
 
 	s_login_server_loop();
-	_exit(0);
+	fl_stop_login_server();
 	return true;
 }
 
@@ -98,7 +107,10 @@ void s_login_server_loop()
 	tv.tv_sec = 10;
 	tv.tv_usec = 0;
 
-	while (true)
+	fl_init_buffer();
+
+	s_run_state = 1;
+	while (0 != s_run_state)
 	{
 		maxfd = -1;
 		FD_ZERO(&readset);

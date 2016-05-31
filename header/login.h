@@ -12,7 +12,7 @@ struct login_connection
 };
 
 void fl_start_login_server();
-
+void fl_stop_login_server();
 
 
 #endif /* SRC_ENGINE_LOGIN_H_ */
