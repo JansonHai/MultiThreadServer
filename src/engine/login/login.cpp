@@ -46,7 +46,7 @@ bool fl_start_login_server()
 	if (-1 == s_listen_fd)
 	{
 		fl_log(2, "login server socket failed, errno:%d\n", errno);
-		fl_stop_login_server()
+		fl_stop_login_server();
 	}
 
 	//set server information
@@ -63,14 +63,14 @@ bool fl_start_login_server()
 	if (-1 == (bind(s_listen_fd,(struct sockaddr*)&server_addr,sizeof(struct sockaddr))))
 	{
 		fl_log(2, "login server bind error, errno:%d\n", errno);
-		fl_stop_login_server()
+		fl_stop_login_server();
 	}
 
 	//listen server
 	if (-1 == listen(s_listen_fd, 1024))
 	{
 		fl_log(2, "login server listen error, errno:%d\n", errno);
-		fl_stop_login_server()
+		fl_stop_login_server();
 	}
 
 	char * addr_tmp;

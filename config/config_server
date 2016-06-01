@@ -1,0 +1,15 @@
+#login
+login_server_ip = 127.0.0.1
+login_server_port = 6666
+
+#gate
+gate_server_ip = 127.0.0.1
+gate_server_port = 6667
+
+#database
+database_server_ip = 127.0.0.1
+datatase_server_port = 6668
+
+#logic
+logic_server_ip = 127.0.0.1
+logic_server_port = 6669
