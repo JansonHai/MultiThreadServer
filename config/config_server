@@ -4,12 +4,13 @@ login_server_port = 6666
 
 #gate
 gate_server_ip = 127.0.0.1
-gate_server_port = 6667
+gate_server_port = 6700
+gate_server_secret_port = 6800
 
 #database
 database_server_ip = 127.0.0.1
-datatase_server_port = 6668
+datatase_server_port = 6900
 
 #logic
 logic_server_ip = 127.0.0.1
-logic_server_port = 6669
+logic_server_port = 7000

@@ -16,12 +16,17 @@ static int s_listen_fd = -1;
 static uint32_t s_session = 0;
 static int s_login_server_pid = -1;
 static int s_run_state = 0;
+static int MAX_CLIENT_CONNECTIONS = 2048;
+
+static struct login_connection * connections;
 
 void s_login_server_loop();
 
 void fl_stop_login_server()
 {
 	s_run_state = 0;
+	usleep(1500000);  //1.5S
+	free(connections);
 	_exit(0);
 }
 
@@ -49,6 +54,14 @@ bool fl_start_login_server()
 		fl_stop_login_server();
 	}
 
+	MAX_CLIENT_CONNECTIONS = fl_getenv("max_client_connection",2048);
+	connections = (struct login_connection * )malloc(MAX_CLIENT_CONNECTIONS * sizeof(struct login_connection));
+	for (int i=0;i<MAX_CLIENT_CONNECTIONS;++i)
+	{
+		connections[i].fd = -1;
+		connections[i].session = 0;
+	}
+
 	//set server information
 	memset(&server_addr,0,sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
@@ -56,8 +69,8 @@ bool fl_start_login_server()
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);  //any ip is ok
 
 	//set socket reuse address
-	bool reuseAddr = true;
-	setsockopt (s_listen_fd, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(bool));
+//	bool reuseAddr = true;
+//	setsockopt (s_listen_fd, SOL_SOCKET, SO_REUSEADDR, &reuseAddr, sizeof(bool));
 
 	//bind server
 	if (-1 == (bind(s_listen_fd,(struct sockaddr*)&server_addr,sizeof(struct sockaddr))))
@@ -80,9 +93,29 @@ bool fl_start_login_server()
 
 	fl_log(0,"login server listen on %s : %d\n", addr_tmp, port_tmp);
 
+	s_run_state = 1;
+	fl_init_buffer();
 	s_login_server_loop();
 	fl_stop_login_server();
 	return true;
+}
+
+static void * s_read_thread(void * arg)
+{
+	while (s_run_state != 0)
+	{
+		usleep(10000);  //10ms;
+	}
+	pthread_exit(0);
+}
+
+static void * s_write_thread(void * arg)
+{
+	while (s_run_state != 0)
+	{
+		usleep(10000);  //10ms;
+	}
+	pthread_exit(0);
 }
 
 void s_login_server_loop()
@@ -107,9 +140,12 @@ void s_login_server_loop()
 	tv.tv_sec = 10;
 	tv.tv_usec = 0;
 
-	fl_init_buffer();
+	//create read thread
+	pthread_create(&tid, &attr, s_read_thread, NULL);
 
-	s_run_state = 1;
+	//create write thread
+	pthread_create(&tid, &attr, s_write_thread, NULL);
+
 	while (0 != s_run_state)
 	{
 		maxfd = -1;
@@ -121,16 +157,16 @@ void s_login_server_loop()
 
 		for (i=0;i < MAX_CLIENT_CONNECTIONS;++i)
 		{
-			if (g_client_conn_fds[i] > maxfd)
+			if (connections[i].fd > maxfd)
 			{
-				maxfd = g_client_conn_fds[i];
-				FD_SET(g_client_conn_fds[i], &readset);
+				maxfd = connections[i].fd;
+				FD_SET(connections[i].fd, &readset);
 			}
 		}
 
 
-		tv.tv_sec = 10;
-		tv.tv_usec = 0;
+		tv.tv_sec = 0;
+		tv.tv_usec = 1000000;  //1S
 		selectn = select(maxfd + 1, &readset, NULL, NULL, &tv);
 
 		if (selectn <= 0)
@@ -157,11 +193,12 @@ void s_login_server_loop()
 			{
 				for (i=0;i<MAX_CLIENT_CONNECTIONS;++i)
 				{
-					if (-1 == g_client_conn_fds[i])
+					if (-1 == connections[i].fd)
 					{
 //						fl_log(1,"Accept client %d,client index = %d\n", clientfd, i);
-						g_client_conn_sessions[i] = ++s_session;
-						g_client_conn_fds[i]= clientfd;
+						connections[i].session = ++s_session;
+						connections[i].fd= clientfd;
+						connections[i].addr = client_addr;
 						if (s_session > 0XFFFFFFFE)
 						{
 							s_session = 0;
@@ -177,12 +214,11 @@ void s_login_server_loop()
 		{
 			for (i=0;i<MAX_CLIENT_CONNECTIONS;++i)
 			{
-				if (-1 == g_client_conn_fds[i]) continue;
-				if (clientfd == g_client_conn_fds[i]) continue;
-				if (FD_ISSET(g_client_conn_fds[i], &readset))
+				if (-1 == connections[i].fd) continue;
+				if (clientfd == connections[i].fd) continue;
+				if (FD_ISSET(connections[i].fd, &readset))
 				{
 					--selectn;
-					fl_push_read_fd_index(i);
 				}
 				if (0 == selectn) break;
 			}

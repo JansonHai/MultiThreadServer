@@ -3,12 +3,15 @@
 
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <stdint.h>
 
 struct login_connection
 {
 	int fd;  //连接fd
+	uint32_t session;
 	struct sockaddr_in addr; /* 连接的地址信息 */
-	int last_time; /* 上一条消息是什么时候接收到的 */
+	char readBuf[2048];
+	char writeBuf[2048];
 };
 
 void fl_start_login_server();
