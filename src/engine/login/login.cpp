@@ -18,15 +18,18 @@ static int s_listen_fd = -1;
 static uint32_t s_session = 0;
 static int s_login_server_pid = -1;
 static int s_run_state = 0;
-static int MAX_CLIENT_s_connections = 2048;
+static int MAX_CLIENT_CONNECTIONS = 2048;
 
 static class BitRecord s_conn_bit_record;
 static class BitRecord s_read_bit_record;
+static class BitRecord s_close_bit_record;
 static class MsgQueue<int> s_read_msg_queue;
+static class MsgQueue<int> s_close_msg_queue;
 static class MsgQueue<struct fl_message_data *> s_work_msg_queue;
 static struct login_connection * s_connections;
+static pthread_mutex_t s_close_mutex;
 
-void s_login_server_loop();
+static void s_login_server_loop();
 
 void fl_stop_login_server()
 {
@@ -60,9 +63,9 @@ bool fl_start_login_server()
 		fl_stop_login_server();
 	}
 
-	MAX_CLIENT_s_connections = fl_getenv("max_client_connection",2048);
-	s_connections = (struct login_connection * )malloc(MAX_CLIENT_s_connections * sizeof(struct login_connection));
-	for (int i=0;i<MAX_CLIENT_s_connections;++i)
+	MAX_CLIENT_CONNECTIONS = fl_getenv("max_client_connection",2048);
+	s_connections = (struct login_connection * )malloc(MAX_CLIENT_CONNECTIONS * sizeof(struct login_connection));
+	for (int i=0;i<MAX_CLIENT_CONNECTIONS;++i)
 	{
 		s_connections[i].fd = -1;
 		s_connections[i].session = 0;
@@ -73,8 +76,10 @@ bool fl_start_login_server()
 	}
 
 	//init bit flag to mark connection
-	s_conn_bit_record.SetBitsLength(MAX_CLIENT_s_connections);
-	s_read_bit_record.SetBitsLength(MAX_CLIENT_s_connections);
+	s_conn_bit_record.SetBitsLength(MAX_CLIENT_CONNECTIONS);
+	s_read_bit_record.SetBitsLength(MAX_CLIENT_CONNECTIONS);
+	s_close_bit_record.SetBitsLength(MAX_CLIENT_CONNECTIONS);
+	pthread_mutex_init(&s_close_mutex, NULL);
 
 	//set server information
 	memset(&server_addr,0,sizeof(server_addr));
@@ -114,15 +119,38 @@ bool fl_start_login_server()
 	return true;
 }
 
-static void s_close_client_conn(int index)
+
+void fl_close_client_conn(int index)
 {
-	struct login_connection * conn;
-	conn = &s_connections[index];
-	if (-1 == conn->fd) return;
-	close(conn->fd);
-	conn->fd = -1;
-	conn->session = -1;
-	s_conn_bit_record.ResetBit(index);
+	pthread_mutex_lock(&s_close_mutex);
+	if (true == s_conn_bit_record.IsSetBit(index) && false == s_close_bit_record.IsSetBit(index))
+	{
+		s_close_msg_queue.push_message(index);
+		s_close_bit_record.SetBit(index);
+	}
+	pthread_mutex_unlock(&s_close_mutex);
+}
+
+static void s_do_real_close_client()
+{
+	pthread_mutex_lock(&s_close_mutex);
+	int index = -1;
+	struct login_connection * conn = NULL;
+	while (true == s_close_msg_queue.pop_message(index))
+	{
+		conn = &s_connections[index];
+		if (NULL == conn || -1 == conn->fd) continue;
+		close(conn->fd);
+		conn->fd = -1;
+		conn->session = -1;
+		s_conn_bit_record.ResetBit(index);
+	}
+	pthread_mutex_unlock(&s_close_mutex);
+}
+
+void fl_send_client_message()
+{
+
 }
 
 static void * s_read_thread(void * arg)
@@ -166,7 +194,7 @@ static void * s_read_thread(void * arg)
 				if (0 == readn)
 				{
 					fl_log(2,"client %d,session %u close\n", conn->fd, conn->session);
-					s_close_client_conn(index);
+					fl_close_client_conn(index);
 					goto _read_thread_loop_end;
 				}
 				else if (-1 == readn)
@@ -219,7 +247,7 @@ static void * s_read_thread(void * arg)
 				if (0 == readn)
 				{
 					fl_log(2,"client %d,session %u close\n", conn->fd, conn->session);
-					s_close_client_conn(index);
+					fl_close_client_conn(index);
 					goto _read_thread_loop_end;
 				}
 				else if (-1 == readn)
@@ -310,7 +338,7 @@ static void * s_write_thread(void * arg)
 	pthread_exit(0);
 }
 
-void s_login_server_loop()
+static void s_login_server_loop()
 {
 	int i;
 	int clientfd;
@@ -329,8 +357,6 @@ void s_login_server_loop()
 	fd_set readset;
 	int maxfd = -1, selectn = 0;
 	struct timeval tv;
-	tv.tv_sec = 10;
-	tv.tv_usec = 0;
 
 	//create read thread
 	pthread_create(&tid, &attr, s_read_thread, NULL);
@@ -349,7 +375,10 @@ void s_login_server_loop()
 		FD_SET(s_listen_fd, &readset);
 		maxfd = s_listen_fd > maxfd ? s_listen_fd : maxfd;
 
-		for (i=0;i < MAX_CLIENT_s_connections;++i)
+		//close client first
+		s_do_real_close_client();
+
+		for (i=0;i<MAX_CLIENT_CONNECTIONS;++i)
 		{
 			if (s_connections[i].fd > maxfd)
 			{
@@ -372,7 +401,6 @@ void s_login_server_loop()
 			continue;
 		}
 
-//		fprintf(stdout,"select %d fd\n",selectn);
 		clientfd = -1;
 
 		if (FD_ISSET(s_listen_fd,&readset))
@@ -404,7 +432,7 @@ void s_login_server_loop()
 
 		if (selectn > 0)
 		{
-			for (i=0;i<MAX_CLIENT_s_connections;++i)
+			for (i=0;i<MAX_CLIENT_CONNECTIONS;++i)
 			{
 				if (-1 == s_connections[i].fd) continue;
 				if (clientfd == s_connections[i].fd) continue;

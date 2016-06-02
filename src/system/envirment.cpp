@@ -182,8 +182,19 @@ bool fl_load_config(const char * configName)
 
 		if ('@' == key[0])
 		{
+			char configPath[2048];
+			realpath(configName,configPath);
+			int len = strlen(configPath)
+			char * ch = configPath[len-1];
+			while (*ch != '/')
+			{
+				*ch = '\0';
+				--ch;
+			}
+			char newConfigName[2048];
+			sprintf(newConfigName,"%s%s", configPath, value);
 			//this line means a config file, load it
-			if (false == fl_load_config(value))
+			if (false == fl_load_config(newConfigName))
 			{
 				fclose(cf);
 				return false;

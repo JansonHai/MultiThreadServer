@@ -1,16 +1,19 @@
-#login
+#login 登录服务端口相关配置
 login_server_ip = 127.0.0.1
-login_server_port = 6666
+login_server_port = 6600
+login_server_ctrl_port = 6601
 
-#gate
+#gate 网管服务端口相关配置
 gate_server_ip = 127.0.0.1
 gate_server_port = 6700
-gate_server_secret_port = 6800
+gate_server_ctrl_port = 6701
 
-#database
+#database 数据库服务端口相关配置
 database_server_ip = 127.0.0.1
 datatase_server_port = 6900
+datatase_server_ctrl_port = 6901
 
-#logic
+#logic 游戏逻辑服务端口相关配置
 logic_server_ip = 127.0.0.1
 logic_server_port = 7000
+logic_server_ctrl_port = 7001

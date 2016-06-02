@@ -8,11 +8,11 @@ class BitRecord
 private:
 	int len;
 	unsigned char * bits;
-
+	int mode;
 public:
 	BitRecord();
 	~BitRecord();
-	void SetBitsLength(int length);
+	void SetBitsLength(int length,int mode = 0);
 	void ReleaseBits();
 	void SetBit(int pos);
 	void ResetBit(int pos);

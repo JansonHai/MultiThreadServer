@@ -19,6 +19,8 @@ struct login_connection
 
 void fl_start_login_server();
 void fl_stop_login_server();
+void fl_close_client(int index);
+void fl_send_client_message();
 
 
 #endif /* SRC_ENGINE_LOGIN_H_ */
