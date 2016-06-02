@@ -144,8 +144,10 @@ void ReadByteArray::ReleaseBuffer()
 	if (NULL != m_buffer)
 	{
 		fl_free(m_buffer);
-		m_buffer = NULL;
 	}
+	m_buffer = NULL;
+	m_size = 0;
+	m_cur_pos = 0;
 }
 
 char ReadByteArray::ReadInt8()

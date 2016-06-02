@@ -3,15 +3,18 @@
 
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 #include <stdint.h>
+#include "net.h"
 
 struct login_connection
 {
 	int fd;  //连接fd
-	uint32_t session;
+	uint32_t session;  //连接的session
+	bool isCloseing; //标记是否准备要关闭的了
+	pthread_mutex_t mutex;  //互斥锁
 	struct sockaddr_in addr; /* 连接的地址信息 */
-	char readBuf[2048];
-	char writeBuf[2048];
+	struct fl_message_data * recv_message;  //接收缓冲区
 };
 
 void fl_start_login_server();
