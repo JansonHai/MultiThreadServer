@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
 #include "buffer.h"
@@ -7,7 +8,7 @@ struct fl_buffer_list
 {
 	int num;
 	int config_num;
-	int size = 0;
+	int size;
 	struct fl_buffer * next;
 };
 
@@ -22,7 +23,7 @@ void fl_init_buffer()
 	struct fl_buffer * buf;
 	fl_buffer_list * stack;
 
-	char * keyNames[128] = {"buffer_1k_num","buffer_2k_num","buffer_4k_num","buffer_8k_num","buffer_16k_num","buffer_32k_num",
+	char keyNames[9][128] = {"buffer_1k_num","buffer_2k_num","buffer_4k_num","buffer_8k_num","buffer_16k_num","buffer_32k_num",
 			"buffer_64k_num","buffer_128k_num","buffer_256k_num"};
 
 	int defVals[9] = {4096,4096,2048,1024,256,128,128,64,64};
