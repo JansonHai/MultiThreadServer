@@ -1,0 +1,18 @@
+服务间的通信原语定义如下
+
+看门狗服务可处理原语
+
+
+
+登录服务可处理原语
+"connect,[password]" 引擎内部请求连接登录服务，[password]为密码
+"shutdown"  通知关闭登录服务
+"reboot"  通知重启登录服务
+
+
+网关服务可处理原语
+"connect,[password]" 引擎内部请求连接网关服务，[password]为密码
+"shutdown"  通知关闭网关服务
+"reboot"  通知重启网关服务
+"client,[account],[key]" 登录服务向网关发送的客户验证通过消息,[account]为帐号,[key]为登录服务生成的一个key
+

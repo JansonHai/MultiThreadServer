@@ -53,7 +53,7 @@ bool fl_start_login_server()
 
 	if (s_login_server_pid > 0)
 	{
-		fl_log(2,"login server fork successfully,pid = %d\n", s_login_server_pid);
+		fl_log(0,"login server fork successfully,pid = %d\n", s_login_server_pid);
 		return true;
 	}
 
