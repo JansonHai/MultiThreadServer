@@ -1,6 +1,8 @@
 #include <pthread.h>
-#include "timer.h"
 #include <unistd.h>
+#include "Timer.h"
+
+static Timer Timer::_instance = Timer();
 
 Timer::Timer()
 {
@@ -13,7 +15,14 @@ Timer::~Timer()
 
 void Timer::Init()
 {
-	pthread_create(&m_tid, NULL, timer_run, NULL);
+	pthread_create(&m_tid, NULL, start_thread, (void *) this);
+}
+
+void * Timer::start_thread(void *arg)
+{
+	Timer * timer = (Timer * arg);
+	timer->timer_run(NULL);
+	pthread_exit(0);
 }
 
 void * Timer::timer_run(void * arg)
@@ -30,7 +39,7 @@ Timer * Timer::getInstance()
 	return &_instance;
 }
 
-int Timer::add_timer(struct timeval,void (*func)(void * arg),char * arg = NULL,int size = 0)
+int Timer::add_timer(struct timeval, void (*func)(void * arg), char * arg, int size)
 {
 	return 0;
 }

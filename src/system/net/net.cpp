@@ -54,7 +54,7 @@ void fl_malloc_message_data(struct fl_message_data * &message, int index, int fd
 	message->index = index;
 	message->fd = fd;
 	message->session = session;
-	message->header = 0;
+	message->header.i = 0;
 	message->headerReadLength = 0;
 	message->data = NULL;
 	message->length = 0;
@@ -74,7 +74,7 @@ void fl_reset_message_data(struct fl_message_data * &message, int index, int fd,
 	message->index = index;
 	message->fd = fd;
 	message->session = session;
-	message->header = 0;
+	message->header.i = 0;
 	message->headerReadLength = 0;
 	message->data = NULL;
 	message->length = 0;
@@ -93,7 +93,7 @@ void fl_drop_message_data(struct fl_message_data * &message)
 	message->index = -1;
 	message->fd = -1;
 	message->session = 0;
-	message->header = 0;
+	message->header.i = 0;
 	message->headerReadLength = 0;
 	message->data = NULL;
 	message->length = 0;
