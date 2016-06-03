@@ -19,6 +19,7 @@ static uint32_t s_session = 0;
 static int s_login_server_pid = -1;
 static int s_run_state = 0;
 static int MAX_CLIENT_CONNECTIONS = 2048;
+static int MAX_MESSAGE_LENGTH = 2097152;
 
 static class BitRecord s_conn_bit_record;
 static class BitRecord s_read_bit_record;
@@ -63,7 +64,9 @@ bool fl_start_login_server()
 		fl_stop_login_server();
 	}
 
-	MAX_CLIENT_CONNECTIONS = fl_getenv("max_client_connection",2048);
+	MAX_MESSAGE_LENGTH = fl_getenv("message_max_length", 2097152);
+
+	MAX_CLIENT_CONNECTIONS = fl_getenv("max_client_connection", 2048);
 	s_connections = (struct login_connection * )malloc(MAX_CLIENT_CONNECTIONS * sizeof(struct login_connection));
 	for (int i=0;i<MAX_CLIENT_CONNECTIONS;++i)
 	{
@@ -151,7 +154,7 @@ static void s_do_real_close_client()
 	pthread_mutex_unlock(&s_close_mutex);
 }
 
-void fl_send_message_to_client(int index, int session, const char * data, int length)
+void fl_send_message_to_client(int index, uint32_t session, const char * data, int length)
 {
 	struct login_connection * conn = &s_connections[index];
 	pthread_mutex_lock(&conn->mutex);
@@ -189,7 +192,6 @@ static void * s_read_thread(void * arg)
 	struct login_connection * conn;
 	while (true)
 	{
-		_read_thread_loop_begin:
 		if (s_run_state != 0) break;
 		result = s_read_msg_queue.pop_message(index);
 		if (false == result)
@@ -332,7 +334,7 @@ static void * s_read_thread(void * arg)
 
 static void * s_work_thread(void * arg)
 {
-	int index, readLeft, readn, length;
+//	int index, readLeft, readn, length;
 	bool result;
 	struct fl_message_data * message;
 	struct login_connection * conn;

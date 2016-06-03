@@ -18,10 +18,10 @@ struct login_connection
 	struct fl_message_data * recv_message;  //接收缓冲区
 };
 
-void fl_start_login_server();
+bool fl_start_login_server();
 void fl_stop_login_server();
 void fl_close_client(int index);
-void fl_send_message_to_client(int index, int session, const char * data, int length);
+void fl_send_message_to_client(int index, uint32_t session, const char * data, int length);
 
 
 #endif /* SRC_ENGINE_LOGIN_H_ */

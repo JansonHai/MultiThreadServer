@@ -9,8 +9,8 @@ class ReadByteArray
 {
 private:
 	struct fl_buffer * m_buffer;
-	int m_size = 0;
-	int m_cur_pos = 0;
+	int m_size;
+	int m_cur_pos;
 
 public:
 	ReadByteArray();
@@ -41,7 +41,7 @@ class WriteByteArray
 {
 private:
 	struct fl_buffer * m_buffer;
-	int m_size = 0;
+	int m_size;
 
 public:
 	WriteByteArray();
