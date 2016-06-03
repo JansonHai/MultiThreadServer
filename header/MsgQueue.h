@@ -48,7 +48,7 @@ bool MsgQueue<T>::pop_message(T &message)
 	pthread_mutex_lock(&m_mutex);
 	if (0 == m_size)
 	{
-		message = NULL;
+		message = static_cast<T>(NULL);
 		pthread_mutex_unlock(&m_mutex);
 		return false;
 	}
