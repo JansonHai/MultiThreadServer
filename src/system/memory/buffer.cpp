@@ -46,7 +46,7 @@ void fl_init_buffer()
 				{
 					continue;
 				}
-				buf->buffer = (void *)malloc(size * sizeof(char));
+				buf->buffer = (char *)malloc(size * sizeof(char));
 				if (NULL == buf->buffer)
 				{
 					free(buf);
@@ -90,7 +90,7 @@ struct fl_buffer * fl_malloc(int size)
 		{
 			return NULL;
 		}
-		buf->buffer = (void *)malloc(fit_size * sizeof(char));
+		buf->buffer = (char *)malloc(fit_size * sizeof(char));
 		if (NULL == buf->buffer)
 		{
 			free(buf);
@@ -107,7 +107,7 @@ struct fl_buffer * fl_malloc(int size)
 		{
 			return NULL;
 		}
-		buf->buffer = (void *)malloc(size * sizeof(char));
+		buf->buffer = (char *)malloc(size * sizeof(char));
 		if (NULL == buf->buffer)
 		{
 			free(buf);
@@ -155,7 +155,7 @@ struct fl_buffer * fl_realloc(struct fl_buffer * _prebuffer,int size)
 		{
 			goto _return_null;
 		}
-		buf->buffer = (void *)malloc(fit_size * sizeof(char));
+		buf->buffer = (char *)malloc(fit_size * sizeof(char));
 		if (NULL == buf->buffer)
 		{
 			free(buf);
@@ -174,7 +174,7 @@ struct fl_buffer * fl_realloc(struct fl_buffer * _prebuffer,int size)
 		{
 			goto _return_null;
 		}
-		buf->buffer = (void *)malloc(size * sizeof(char));
+		buf->buffer = (char *)malloc(size * sizeof(char));
 		if (NULL == buf->buffer)
 		{
 			free(buf);

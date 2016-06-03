@@ -385,8 +385,8 @@ double ReadByteArray::ReadDouble()
 
 std::string ReadByteArray::ReadString()
 {
-	uint32_t len = ReadUInt32();
-	if (len != (uint32_t)0xffffffff)
+	int len = ReadInt32();
+	if (len != (int)0xffffffff)
 	{
 		if (0 == len || m_cur_pos + len > m_size)
 		{
