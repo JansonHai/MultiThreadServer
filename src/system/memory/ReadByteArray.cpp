@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string>
 #include "ByteArray.h"
 #include "logger.h"
 #include "buffer.h"
@@ -376,22 +377,27 @@ double ReadByteArray::ReadDouble()
 	return d.n;
 }
 
-const char * ReadByteArray::ReadString()
+std::string ReadByteArray::ReadString()
 {
 	int32_t len = ReadInt32();
 	if (len != 0xffffffff)
 	{
-		char * buf = &m_buffer->buffer[m_cur_pos];
-		if (m_cur_pos + len > m_size)
+		if (0 == len || m_cur_pos + len > m_size)
 		{
-			return NULL;
+			return std::string("");
 		}
+		char * buf = &m_buffer->buffer[m_cur_pos];
 		m_cur_pos += len;
-		return buf;
+		struct fl_buffer * tmp = fl_malloc(len);
+		memcpy(tmp->buffer, buf, len);
+		tmp->buffer[len] = '\0';
+		std::string ret((char * )tmp->buffer);
+		fl_free(tmp);
+		return ret;
 	}
 	else
 	{
-		return NULL;
+		return std::string("");
 	}
-	return NULL;
+	return std::string("");
 }

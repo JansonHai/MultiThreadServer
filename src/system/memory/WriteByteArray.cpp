@@ -421,7 +421,7 @@ bool WriteByteArray::WriteDouble(double d)
 
 bool WriteByteArray::WriteString(const char * str)
 {
-	int len = strlen(str) + 1;
+	int len = strlen(str);
 	if (m_size + len + 4 > m_buffer->size)
 	{
 		int size = m_buffer->size << 1;
@@ -435,7 +435,10 @@ bool WriteByteArray::WriteString(const char * str)
 		m_buffer = tmp;
 	}
 	WriteInt32(len);
-	memcpy(m_buffer->buffer, str, len);
-	m_size += len;
+	if (0 != len)
+	{
+		memcpy(m_buffer->buffer, str, len);
+		m_size += len;
+	}
 	return true;
 }

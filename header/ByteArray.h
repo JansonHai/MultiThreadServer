@@ -2,6 +2,7 @@
 #define HEADER_BYTEARRAY_H_
 
 #include <stdio.h>
+#include <string>
 #include <sys/types.h>
 
 class ReadByteArray
@@ -32,7 +33,7 @@ public:
 	uint64_t ReadUInt64();
 	float ReadFloat();
 	double ReadDouble();
-	const char * ReadString();
+	std::string ReadString();
 
 };
 

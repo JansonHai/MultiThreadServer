@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include <stdint.h>
 #include "net.h"
+#include "ByteArray.h"
 
 struct login_connection
 {
@@ -20,7 +21,7 @@ struct login_connection
 void fl_start_login_server();
 void fl_stop_login_server();
 void fl_close_client(int index);
-void fl_send_client_message();
+void fl_send_message_to_client(int index, int session, const char * data, int length);
 
 
 #endif /* SRC_ENGINE_LOGIN_H_ */

@@ -125,6 +125,8 @@ void fl_close_client_conn(int index)
 	pthread_mutex_lock(&s_close_mutex);
 	if (true == s_conn_bit_record.IsSetBit(index) && false == s_close_bit_record.IsSetBit(index))
 	{
+		struct login_connection * conn = &s_connections[index];
+		conn->isCloseing = true;
 		s_close_msg_queue.push_message(index);
 		s_close_bit_record.SetBit(index);
 	}
@@ -143,14 +145,41 @@ static void s_do_real_close_client()
 		close(conn->fd);
 		conn->fd = -1;
 		conn->session = -1;
+		conn->isCloseing = false;
 		s_conn_bit_record.ResetBit(index);
 	}
 	pthread_mutex_unlock(&s_close_mutex);
 }
 
-void fl_send_client_message()
+void fl_send_message_to_client(int index, int session, const char * data, int length)
 {
-
+	struct login_connection * conn = &s_connections[index];
+	pthread_mutex_lock(&conn->mutex);
+	if (conn->isCloseing || session != conn->session)
+	{
+		pthread_mutex_unlock(&conn->mutex);
+		return;
+	}
+	int sendn;
+	while (length > 0)
+	{
+		if (true == conn->isCloseing || session != conn->session)
+		{
+			break;
+		}
+		sendn = send(conn->fd, data, length, MSG_NOSIGNAL);
+		if (sendn <= 0)
+		{
+			if (EAGAIN == errno || EINTR == errno)
+			{
+				continue;
+			}
+			fl_log(2,"send message to client %d,session=%d failed,errno:", conn->fd, conn->session, errno);
+			break;
+		}
+		length -= sendn;
+	}
+	pthread_mutex_unlock(&conn->mutex);
 }
 
 static void * s_read_thread(void * arg)
@@ -189,6 +218,10 @@ static void * s_read_thread(void * arg)
 		{
 			while (conn->recv_message->headerReadLength != 4)
 			{
+				if (true == conn->isCloseing || -1 == conn->fd)
+				{
+					goto _read_thread_loop_end;
+				}
 				readLeft = 4 - conn->recv_message->headerReadLength;
 				readn = recv(conn->fd, &conn->recv_message->header.c + conn->recv_message->headerReadLength, readLeft, MSG_DONTWAIT | MSG_NOSIGNAL);
 				if (0 == readn)
@@ -235,6 +268,10 @@ static void * s_read_thread(void * arg)
 		{
 			while (conn->recv_message->readLength < conn->recv_message->length)
 			{
+				if (true == conn->isCloseing || -1 == conn->fd)
+				{
+					goto _read_thread_loop_end;
+				}
 				if (false == conn->recv_message->isDropMessage)
 				{
 					readLeft = conn->recv_message->length - conn->recv_message->readLength;
@@ -328,16 +365,6 @@ static void * s_work_thread(void * arg)
 	pthread_exit(0);
 }
 
-static void * s_write_thread(void * arg)
-{
-	while (true)
-	{
-		if (s_run_state != 0) break;
-		usleep(10000);  //10ms;
-	}
-	pthread_exit(0);
-}
-
 static void s_login_server_loop()
 {
 	int i;
@@ -359,13 +386,16 @@ static void s_login_server_loop()
 	struct timeval tv;
 
 	//create read thread
-	pthread_create(&tid, &attr, s_read_thread, NULL);
+	for (i=0;i<2;++i)
+	{
+		pthread_create(&tid, &attr, s_read_thread, NULL);
+	}
 
 	//create work thread
-	pthread_create(&tid, &attr, s_work_thread, NULL);
-
-	//create write thread
-	pthread_create(&tid, &attr, s_write_thread, NULL);
+	for (i=0;i<2;++i)
+	{
+		pthread_create(&tid, &attr, s_work_thread, NULL);
+	}
 
 	while (true)
 	{
@@ -375,7 +405,7 @@ static void s_login_server_loop()
 		FD_SET(s_listen_fd, &readset);
 		maxfd = s_listen_fd > maxfd ? s_listen_fd : maxfd;
 
-		//close client first
+		//close client in queue first
 		s_do_real_close_client();
 
 		for (i=0;i<MAX_CLIENT_CONNECTIONS;++i)
