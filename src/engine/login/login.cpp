@@ -13,6 +13,7 @@
 #include "ByteArray.h"
 #include "BitRecord.h"
 #include "MsgQueue.h"
+#include "envirment.h"
 
 static int s_listen_fd = -1;
 static uint32_t s_session = 0;
@@ -65,7 +66,6 @@ bool fl_start_login_server()
 	}
 
 	MAX_MESSAGE_LENGTH = fl_getenv("message_max_length", 2097152);
-
 	MAX_CLIENT_CONNECTIONS = fl_getenv("max_client_connection", 2048);
 	s_connections = (struct login_connection * )malloc(MAX_CLIENT_CONNECTIONS * sizeof(struct login_connection));
 	for (int i=0;i<MAX_CLIENT_CONNECTIONS;++i)

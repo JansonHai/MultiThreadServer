@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <string>
+#include <string.h>
+#include <stdint.h>
 #include "ByteArray.h"
 #include "logger.h"
 #include "buffer.h"
@@ -130,9 +132,13 @@ void ReadByteArray::ReadSeek(int pos)
 	}
 }
 
-const char * ReadByteArray::GetBuffer()
+char * ReadByteArray::GetBuffer() const
 {
-	return m_buffer->buffer;
+	if (NULL != m_buffer)
+	{
+		return m_buffer->buffer;
+	}
+	return NULL;
 }
 
 int ReadByteArray::GetArraySize()
@@ -157,7 +163,7 @@ char ReadByteArray::ReadInt8()
 	{
 		return (char)0xff;
 	}
-	return m_buffer->buffer[m_cur_pos++];
+	return (char)m_buffer->buffer[m_cur_pos++];
 }
 
 int16_t ReadByteArray::ReadInt16()

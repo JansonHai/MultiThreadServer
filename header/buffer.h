@@ -3,7 +3,7 @@
 
 struct fl_buffer
 {
-	void * buffer;
+	char * buffer;
 	int size;
 	struct fl_buffer * next;
 };

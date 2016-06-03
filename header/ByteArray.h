@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <string>
-#include <sys/types.h>
+#include <stdint.h>
 
 class ReadByteArray
 {
@@ -19,7 +19,7 @@ public:
 	bool SetReadContent(const char * str, int size);
 	void ResetReadPos();
 	void ReadSeek(int pos);
-	const char * GetBuffer();
+	char * GetBuffer() const;
 	int GetArraySize();
 	void ReleaseBuffer();
 
@@ -50,7 +50,7 @@ public:
 	void InitBuffer(int size = 2048);
 	void ResetWrite();
 	void WriteSeek(int pos);
-	const char * GetBuffer();
+	char * GetBuffer() const;
 	int GetArraySize();
 	void ReleaseBuffer();
 

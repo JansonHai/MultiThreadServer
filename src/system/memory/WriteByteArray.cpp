@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
 #include "ByteArray.h"
 #include "logger.h"
 #include "buffer.h"
@@ -89,11 +91,11 @@ void WriteByteArray::InitBuffer(int size)
 	m_size = 0;
 }
 
-const char * WriteByteArray::GetBuffer()
+char * WriteByteArray::GetBuffer() const
 {
 	if (NULL != m_buffer)
 	{
-		m_buffer->buffer;
+		return m_buffer->buffer;
 	}
 	return NULL;
 }
