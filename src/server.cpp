@@ -45,7 +45,10 @@ void fl_server_start()
 
 void fl_server_main_loop()
 {
-
+	while (true)
+	{
+		sleep(2);
+	}
 }  //server main loop end
 
 
