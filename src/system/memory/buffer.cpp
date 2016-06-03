@@ -120,7 +120,7 @@ struct fl_buffer * fl_malloc(int size)
 }
 
 
-bool fl_realloc(struct fl_buffer * _prebuffer,int size)
+struct fl_buffer * fl_realloc(struct fl_buffer * _prebuffer,int size)
 {
 	pthread_mutex_lock(&s_malloc_lock);
 	if (size <= _prebuffer->size) return NULL;
@@ -144,54 +144,53 @@ bool fl_realloc(struct fl_buffer * _prebuffer,int size)
 	if (NULL != buf)
 	{
 		memcpy(buf->buffer, _prebuffer->buffer, _prebuffer->size);
-		pthread_mutex_unlock(&s_malloc_lock);
 		fl_free(_prebuffer);
-		return buf;
+		goto _return_buf;
 	}
 	if (0 != fit_size)
 	{
 		buf = (struct fl_buffer *)malloc(sizeof(struct fl_buffer));
 		if (NULL == buf)
 		{
-			pthread_mutex_unlock(&s_malloc_lock);
-			return NULL;
+			goto _return_null;
 		}
 		buf->buffer = (void *)malloc(fit_size * sizeof(char));
 		if (NULL == buf->buffer)
 		{
 			free(buf);
-			pthread_mutex_unlock(&s_malloc_lock);
-			return NULL;
+			goto _return_null;
 		}
 		buf->size = fit_size;
 		buf->next = NULL;
 		memcpy(buf->buffer, _prebuffer->buffer, _prebuffer->size);
-		pthread_mutex_unlock(&s_malloc_lock);
 		fl_free(_prebuffer);
-		return buf;
+		goto _return_buf;
 	}
 	else
 	{
 		buf = (struct fl_buffer *)malloc(sizeof(struct fl_buffer));
 		if (NULL == buf)
 		{
-			pthread_mutex_unlock(&s_malloc_lock);
-			return NULL;
+			goto _return_null;
 		}
 		buf->buffer = (void *)malloc(size * sizeof(char));
 		if (NULL == buf->buffer)
 		{
 			free(buf);
-			pthread_mutex_unlock(&s_malloc_lock);
-			return NULL;
+			goto _return_null;
 		}
 		buf->size = size;
 		buf->next = NULL;
 		memcpy(buf->buffer, _prebuffer->buffer, _prebuffer->size);
-		pthread_mutex_unlock(&s_malloc_lock);
 		fl_free(_prebuffer);
-		return buf;
+		goto _return_buf;
 	}
+
+	_return_buf:
+	pthread_mutex_unlock(&s_malloc_lock);
+	return buf;
+
+	_return_null:
 	pthread_mutex_unlock(&s_malloc_lock);
 	return NULL;
 }
