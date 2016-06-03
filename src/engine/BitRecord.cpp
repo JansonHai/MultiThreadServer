@@ -6,6 +6,7 @@ BitRecord::BitRecord()
 {
 	len = 0;
 	bits = NULL;
+	mode = 0;
 }
 
 BitRecord::~BitRecord()

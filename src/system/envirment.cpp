@@ -184,8 +184,8 @@ bool fl_load_config(const char * configName)
 		{
 			char configPath[2048];
 			realpath(configName,configPath);
-			int len = strlen(configPath)
-			char * ch = configPath[len-1];
+			int len = strlen(configPath);
+			char * ch = &configPath[len-1];
 			while (*ch != '/')
 			{
 				*ch = '\0';

@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include "Timer.h"
 
-static Timer Timer::_instance = Timer();
+Timer Timer::_instance = Timer();
 
 Timer::Timer()
 {
@@ -20,7 +20,7 @@ void Timer::Init()
 
 void * Timer::start_thread(void *arg)
 {
-	Timer * timer = (Timer * arg);
+	Timer * timer = (Timer *) arg;
 	timer->timer_run(NULL);
 	pthread_exit(0);
 }

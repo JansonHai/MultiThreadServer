@@ -12,7 +12,10 @@
 #include "buffer.h"
 #include "ByteArray.h"
 #include "BitRecord.h"
-#include "MsgQueue.h"
+extern "C"
+{
+	#include "MsgQueue.h"
+}
 #include "envirment.h"
 
 static int s_listen_fd = -1;
