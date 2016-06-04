@@ -289,7 +289,7 @@ bool fl_connection::Recv()
 					//push message to work thread
 					if (NULL != m_callback)
 					{
-						m_callback(recv_message);
+						(*m_callback)(recv_message);
 					}
 					else
 					{
@@ -320,7 +320,7 @@ bool fl_connection::Recv()
 	return ret;
 }
 
-bool fl_connection::Send(char * data, int len)
+bool fl_connection::Send(const char * data, int len)
 {
 	pthread_rwlock_rdlock(&rwlock);
 
@@ -413,7 +413,10 @@ int fl_connection::GetSession()
 void fl_connection::Close()
 {
 	pthread_rwlock_wrlock(&rwlock);
-	close(sockfd);
+	if (-1 != sockfd)
+	{
+		close(sockfd);
+	}
 	sockfd = -1;
 	session = 0;
 	pthread_rwlock_unlock(&rwlock);

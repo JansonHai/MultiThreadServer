@@ -16,7 +16,6 @@
 #include "envirment.h"
 
 static int s_listen_fd = -1;
-static uint32_t s_session = 0;
 static int s_login_server_pid = -1;
 static int s_run_state = 0;
 static int MAX_CLIENT_CONNECTIONS = 2048;
@@ -24,21 +23,25 @@ static int MAX_MESSAGE_LENGTH = 2097152;
 
 static class BitRecord s_conn_bit_record;
 static class BitRecord s_read_bit_record;
-static class BitRecord s_close_bit_record;
 static class MsgQueue<int> s_read_msg_queue;
-static class MsgQueue<int> s_close_msg_queue;
 static class MsgQueue<struct fl_message_data *> s_work_msg_queue;
-static struct login_connection * s_connections;
+static class fl_connection * s_connections;
 static pthread_mutex_t s_close_mutex;
 
 static void s_login_server_loop();
-static bool s_start_backgate_server();
+static void s_recv_data_callback(struct fl_message_data * message);
 
 void fl_stop_login_server()
 {
+	close(s_listen_fd);
 	s_run_state = 0;
+	fl_stop_login_backgate_server();
 	usleep(1000000 * 5);  //5S
-	free(s_connections);
+	for (int i=0; i<MAX_CLIENT_CONNECTIONS; ++i)
+	{
+		s_connections[i].Close();
+	}
+	delete [] s_connections;
 	_exit(0);
 }
 
@@ -68,21 +71,17 @@ bool fl_start_login_server()
 
 	MAX_MESSAGE_LENGTH = fl_getenv("message_max_length", 131072);
 	MAX_CLIENT_CONNECTIONS = fl_getenv("max_client_connection", 2048);
-	s_connections = (struct login_connection * )malloc(MAX_CLIENT_CONNECTIONS * sizeof(struct login_connection));
+	s_connections = new fl_connection[MAX_CLIENT_CONNECTIONS]();
 	for (int i=0;i<MAX_CLIENT_CONNECTIONS;++i)
 	{
-		s_connections[i].fd = -1;
-		s_connections[i].session = 0;
-		memset(&s_connections[i].addr,0,sizeof(s_connections[i].addr));
-		s_connections[i].recv_message = NULL;
-		s_connections[i].isCloseing = false;
-		pthread_mutex_init(&s_connections[i].mutex, NULL);
+		s_connections[i].SetIndex(i);
+		s_connections[i].SetMaxMessageLength(MAX_MESSAGE_LENGTH);
+		s_connections[i].SetRecvCallBack(s_recv_data_callback);
 	}
 
 	//init bit flag to mark connection
 	s_conn_bit_record.SetBitsLength(MAX_CLIENT_CONNECTIONS);
 	s_read_bit_record.SetBitsLength(MAX_CLIENT_CONNECTIONS);
-	s_close_bit_record.SetBitsLength(MAX_CLIENT_CONNECTIONS);
 	pthread_mutex_init(&s_close_mutex, NULL);
 
 	//set server information
@@ -120,7 +119,7 @@ bool fl_start_login_server()
 
 	s_run_state = 1;
 	fl_init_buffer();
-	if (false == s_start_backgate_server())
+	if (false == fl_start_login_backgate_server())
 	{
 		fl_log(2,"strt login backgate server failed..\n");
 		fl_stop_login_server();
@@ -131,77 +130,32 @@ bool fl_start_login_server()
 	return true;
 }
 
-
-void fl_close_client_conn(int index)
-{
-	pthread_mutex_lock(&s_close_mutex);
-	if (true == s_conn_bit_record.IsSetBit(index) && false == s_close_bit_record.IsSetBit(index))
-	{
-		struct login_connection * conn = &s_connections[index];
-		conn->isCloseing = true;
-		s_close_msg_queue.push_message(index);
-		s_close_bit_record.SetBit(index);
-	}
-	pthread_mutex_unlock(&s_close_mutex);
-}
-
-static void s_do_real_close_client()
-{
-	pthread_mutex_lock(&s_close_mutex);
-	int index = -1;
-	struct login_connection * conn = NULL;
-	while (true == s_close_msg_queue.pop_message(index))
-	{
-		conn = &s_connections[index];
-		if (NULL == conn || -1 == conn->fd) continue;
-		close(conn->fd);
-		conn->fd = -1;
-		conn->session = -1;
-		conn->isCloseing = false;
-		s_conn_bit_record.ResetBit(index);
-	}
-	pthread_mutex_unlock(&s_close_mutex);
-}
-
 void fl_send_message_to_client(int index, uint32_t session, const char * data, int length)
 {
-	struct login_connection * conn = &s_connections[index];
-	pthread_mutex_lock(&conn->mutex);
-	if (conn->isCloseing || session != conn->session)
+	class fl_connection * conn = &s_connections[index];
+	if (conn->GetSession() == session)
 	{
-		pthread_mutex_unlock(&conn->mutex);
-		return;
-	}
-	int sendn;
-	while (length > 0)
-	{
-		if (true == conn->isCloseing || session != conn->session)
+		if (false == conn->Send(data, length))
 		{
-			break;
+			conn->Close();
+			s_conn_bit_record.ResetBit(index);
 		}
-		sendn = send(conn->fd, data, length, MSG_NOSIGNAL);
-		if (sendn <= 0)
-		{
-			if (EAGAIN == errno || EINTR == errno)
-			{
-				continue;
-			}
-			fl_log(2,"send message to client %d,session=%d failed,errno:", conn->fd, conn->session, errno);
-			break;
-		}
-		length -= sendn;
 	}
-	pthread_mutex_unlock(&conn->mutex);
+}
+
+static void s_recv_data_callback(struct fl_message_data * message)
+{
+	s_work_msg_queue.push_message(message);
 }
 
 static void * s_read_thread(void * arg)
 {
 	int index, readLeft, readn, length;
 	bool result;
-	struct login_connection * conn;
+	class fl_connection * conn = NULL;
 	while (true)
 	{
-		if (s_run_state != 0) break;
+		if (0 == s_run_state) break;
 		result = s_read_msg_queue.pop_message(index);
 		if (false == result)
 		{
@@ -209,134 +163,13 @@ static void * s_read_thread(void * arg)
 			continue;
 		}
 		conn = &s_connections[index];
-		pthread_mutex_lock(&conn->mutex);
-		if (-1 == conn->fd)
+		if (false == conn->Recv())
 		{
-			goto _read_thread_loop_end;
+			conn->Close();
+			s_conn_bit_record.ResetBit(index);
 		}
-
-		if (NULL == conn->recv_message)
-		{
-			fl_malloc_message_data(conn->recv_message, index, conn->fd, conn->session);
-		}
-
-		if (conn->session != conn->recv_message->session)
-		{
-			fl_reset_message_data(conn->recv_message, index, conn->fd, conn->session);
-		}
-
-		if (4 != conn->recv_message->headerReadLength)
-		{
-			while (conn->recv_message->headerReadLength != 4)
-			{
-				if (true == conn->isCloseing || -1 == conn->fd)
-				{
-					goto _read_thread_loop_end;
-				}
-				readLeft = 4 - conn->recv_message->headerReadLength;
-				readn = recv(conn->fd, &conn->recv_message->header.c + conn->recv_message->headerReadLength, readLeft, MSG_DONTWAIT | MSG_NOSIGNAL);
-				if (0 == readn)
-				{
-					fl_log(2,"client %d,session %u close\n", conn->fd, conn->session);
-					fl_close_client_conn(index);
-					goto _read_thread_loop_end;
-				}
-				else if (-1 == readn)
-				{
-					if (EAGAIN == errno || EINTR == errno)
-					{
-						goto _read_thread_loop_end;
-					}
-					else
-					{
-						fl_log(2,"client %d,session %u read error,errno: %d\n",conn->fd, conn->session, errno);
-						goto _read_thread_loop_end;
-					}
-				}
-				conn->recv_message->headerReadLength += readn;
-			}
-			length = ntohl(conn->recv_message->header.i);
-			if (length <= MAX_MESSAGE_LENGTH)
-			{
-				conn->recv_message->length = length;
-				conn->recv_message->data = (char *)malloc(length * sizeof(char));
-				conn->recv_message->readLength = 0;
-				conn->recv_message->isReadFinish = false;
-				conn->recv_message->isDropMessage = false;
-			}
-			else
-			{
-				fl_log(2,"client %d send message too large,length : %d, this message will drop\n", conn->fd, length);
-				conn->recv_message->length = length;
-				conn->recv_message->data = (char *)malloc(1024 * sizeof(char));
-				conn->recv_message->readLength = 0;
-				conn->recv_message->isReadFinish = false;
-				conn->recv_message->isDropMessage = true;
-			}
-		}
-
-		if (conn->recv_message->length > 0)
-		{
-			while (conn->recv_message->readLength < conn->recv_message->length)
-			{
-				if (true == conn->isCloseing || -1 == conn->fd)
-				{
-					goto _read_thread_loop_end;
-				}
-				if (false == conn->recv_message->isDropMessage)
-				{
-					readLeft = conn->recv_message->length - conn->recv_message->readLength;
-					readn = recv(conn->fd, conn->recv_message->data + conn->recv_message->readLength, readLeft, MSG_DONTWAIT | MSG_NOSIGNAL);
-				}
-				else
-				{
-					readn = recv(conn->fd, conn->recv_message->data, 1024, MSG_DONTWAIT | MSG_NOSIGNAL);
-				}
-				if (0 == readn)
-				{
-					fl_log(2,"client %d,session %u close\n", conn->fd, conn->session);
-					fl_close_client_conn(index);
-					goto _read_thread_loop_end;
-				}
-				else if (-1 == readn)
-				{
-					if (EAGAIN == errno || EINTR == errno)
-					{
-						goto _read_thread_loop_end;
-					}
-					else
-					{
-						fl_log(2,"client %d,session %u read error,errno: %d\n",conn->fd, conn->session, errno);
-						goto _read_thread_loop_end;
-					}
-				}
-				conn->recv_message->readLength += readn;
-				if (conn->recv_message->readLength == conn->recv_message->length)
-				{
-					conn->recv_message->isReadFinish = true;
-					if (false == conn->recv_message->isDropMessage)
-					{
-						//push message to work thread
-						s_work_msg_queue.push_message(conn->recv_message);
-						conn->recv_message = NULL;
-					}
-					else
-					{
-						//drop this message
-						fl_drop_message_data(conn->recv_message);
-					}
-					goto _read_thread_loop_end;
-				}
-				if (true == conn->recv_message->isDropMessage)
-				{
-					goto _read_thread_loop_end;
-				}
-			}
-		}
-
-		_read_thread_loop_end:
 		s_read_bit_record.ResetBit(index);
-		pthread_mutex_unlock(&conn->mutex);
+		conn = NULL;
 	}
 	pthread_exit(0);
 }
@@ -346,11 +179,11 @@ static void * s_work_thread(void * arg)
 //	int index, readLeft, readn, length;
 	bool result;
 	struct fl_message_data * message;
-	struct login_connection * conn;
+	class fl_connection * conn;
 	ReadByteArray * readByteArray;
 	while (true)
 	{
-		if (s_run_state != 0) break;
+		if (0 == s_run_state) break;
 		message = NULL;
 		result = s_work_msg_queue.pop_message(message);
 		if (false == result)
@@ -360,7 +193,7 @@ static void * s_work_thread(void * arg)
 		}
 
 		conn = &s_connections[message->index];
-		if (conn->session != message->session)
+		if (conn->GetSession() != message->session)
 		{
 			fl_free_message_data(message);
 			message = NULL;
@@ -382,6 +215,7 @@ static void s_login_server_loop()
 	int clientfd;
 	struct sockaddr_in client_addr;
 	socklen_t client_len = sizeof(struct sockaddr);
+	uint32_t session = 0;
 
 	fprintf(stdout, "starting main loop\n");
 	fl_log(0, "starting main loop\n");
@@ -410,21 +244,21 @@ static void s_login_server_loop()
 
 	while (true)
 	{
-		if (s_run_state != 0) break;
+		if (0 == s_run_state) break;
 		maxfd = -1;
 		FD_ZERO(&readset);
 		FD_SET(s_listen_fd, &readset);
 		maxfd = s_listen_fd > maxfd ? s_listen_fd : maxfd;
 
 		//close client in queue first
-		s_do_real_close_client();
+//		s_do_real_close_client();
 
 		for (i=0;i<MAX_CLIENT_CONNECTIONS;++i)
 		{
-			if (s_connections[i].fd > maxfd)
+			if (s_connections[i].GetSockfd() > maxfd)
 			{
-				maxfd = s_connections[i].fd;
-				FD_SET(s_connections[i].fd, &readset);
+				maxfd = s_connections[i].GetSockfd();
+				FD_SET(s_connections[i].GetSockfd(), &readset);
 			}
 		}
 
@@ -459,12 +293,11 @@ static void s_login_server_loop()
 				{
 					s_conn_bit_record.SetBit(i);
 					fl_log(1,"Accept client %d,client index = %d\n", clientfd, i);
-					s_connections[i].session = ++s_session;
-					s_connections[i].fd= clientfd;
-					s_connections[i].addr = client_addr;
-					if (s_session > 0XFFFFFFFE)
+					s_connections[i].SetSocketInfo(clientfd, ++session);
+					s_connections[i].SetAddrInfo(&client_addr);
+					if (session > 0XFFFFFFFE)
 					{
-						s_session = 0;
+						session = 0;
 					}
 				}
 			}
@@ -475,9 +308,9 @@ static void s_login_server_loop()
 		{
 			for (i=0;i<MAX_CLIENT_CONNECTIONS;++i)
 			{
-				if (-1 == s_connections[i].fd) continue;
-				if (clientfd == s_connections[i].fd) continue;
-				if (FD_ISSET(s_connections[i].fd, &readset))
+				if (-1 == s_connections[i].GetSockfd()) continue;
+				if (clientfd == s_connections[i].GetSockfd()) continue;
+				if (FD_ISSET(s_connections[i].GetSockfd(), &readset))
 				{
 					if (false == s_read_bit_record.IsSetBit(i))
 					{
@@ -492,132 +325,3 @@ static void s_login_server_loop()
 
 	}   //end of while(true)
 }  //server main loop end
-
-static void * s_backgate_thread(void * arg);
-
-static int s_back_gate_listen_fd;
-static bool s_start_backgate_server()
-{
-	struct sockaddr_in server_addr;
-	s_back_gate_listen_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (-1 == s_back_gate_listen_fd)
-	{
-		fl_log(2, "login backgate server socket failed, errno:%d\n", errno);
-		return false;
-	}
-
-	//set server information
-	memset(&server_addr,0,sizeof(server_addr));
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons((uint16_t)fl_getenv("login_server_ctrl_port", 6601));
-	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);  //any ip is ok
-
-	//bind server
-	if (-1 == (bind(s_back_gate_listen_fd,(struct sockaddr*)&server_addr,sizeof(struct sockaddr))))
-	{
-		close(s_back_gate_listen_fd);
-		fl_log(2, "login backgate server bind error, errno:%d\n", errno);
-		return false;
-	}
-
-	//listen server
-	if (-1 == listen(s_back_gate_listen_fd, 1024))
-	{
-		close(s_back_gate_listen_fd);
-		fl_log(2, "login backgate server listen error, errno:%d\n", errno);
-		return false;
-	}
-
-	char * addr_tmp;
-	uint16_t port_tmp;
-	addr_tmp = inet_ntoa(server_addr.sin_addr);
-	port_tmp = ntohs(server_addr.sin_port);
-
-	fl_log(0,"login backgate server listen on %s : %d\n", addr_tmp, port_tmp);
-
-	pthread_t tid;
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-	pthread_create(&tid, &attr, s_backgate_thread, NULL);
-	return true;
-}
-
-static void * s_backgate_thread(void * arg)
-{
-	//start main loop
-	fd_set readset;
-	int maxfd = -1, selectn = 0, clientfd;
-	struct timeval tv;
-	while (true)
-	{
-		if (s_run_state != 0) break;
-		maxfd = -1;
-		FD_ZERO(&readset);
-		FD_SET(s_listen_fd, &readset);
-		maxfd = s_listen_fd > maxfd ? s_listen_fd : maxfd;
-
-		tv.tv_sec = 0;
-		tv.tv_usec = 1000000;  //1S
-		selectn = select(maxfd + 1, &readset, NULL, NULL, &tv);
-
-		if (selectn <= 0)
-		{
-			if (selectn < 0)
-			{
-				fl_log(2,"select error, errno:%d\n", errno);
-			}
-			continue;
-		}
-
-		clientfd = -1;
-
-		if (FD_ISSET(s_listen_fd,&readset))
-		{
-			//new client
-			clientfd = accept(s_listen_fd,(struct sockaddr*)&client_addr,&client_len);
-			if (-1 == clientfd)
-			{
-				fl_log(2,"Accept client error,errno = %d\n",errno);
-			}
-			else
-			{
-				i = s_conn_bit_record.GetUnSetBitPosition();
-				if (-1 != i)
-				{
-					s_conn_bit_record.SetBit(i);
-					fl_log(1,"Accept client %d,client index = %d\n", clientfd, i);
-					s_connections[i].session = ++s_session;
-					s_connections[i].fd= clientfd;
-					s_connections[i].addr = client_addr;
-					if (s_session > 0XFFFFFFFE)
-					{
-						s_session = 0;
-					}
-				}
-			}
-			--selectn;
-		}
-
-		if (selectn > 0)
-		{
-			for (i=0;i<MAX_CLIENT_CONNECTIONS;++i)
-			{
-				if (-1 == s_connections[i].fd) continue;
-				if (clientfd == s_connections[i].fd) continue;
-				if (FD_ISSET(s_connections[i].fd, &readset))
-				{
-					if (false == s_read_bit_record.IsSetBit(i))
-					{
-						s_read_bit_record.SetBit(i);
-						s_read_msg_queue.push_message(i);
-					}
-					--selectn;
-				}
-				if (0 == selectn) break;
-			}
-		}
-
-	}
-	pthread_exit(0);
-}

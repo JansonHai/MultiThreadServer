@@ -22,6 +22,8 @@ bool fl_start_login_server();
 void fl_stop_login_server();
 void fl_close_client(int index);
 void fl_send_message_to_client(int index, uint32_t session, const char * data, int length);
+bool fl_start_login_backgate_server();
+void fl_stop_login_backgate_server();
 
 
 #endif /* SRC_ENGINE_LOGIN_H_ */

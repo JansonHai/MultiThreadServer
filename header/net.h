@@ -58,7 +58,7 @@ public:
 	int GetSockfd();
 	int GetSession();
 	bool Recv();
-	bool Send(char * data, int len);
+	bool Send(const char * data, int len);
 	void Close();
 };
 
