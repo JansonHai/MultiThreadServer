@@ -32,6 +32,7 @@ static struct login_connection * s_connections;
 static pthread_mutex_t s_close_mutex;
 
 static void s_login_server_loop();
+static bool s_start_backgate_server();
 
 void fl_stop_login_server()
 {
@@ -65,7 +66,7 @@ bool fl_start_login_server()
 		fl_stop_login_server();
 	}
 
-	MAX_MESSAGE_LENGTH = fl_getenv("message_max_length", 2097152);
+	MAX_MESSAGE_LENGTH = fl_getenv("message_max_length", 131072);
 	MAX_CLIENT_CONNECTIONS = fl_getenv("max_client_connection", 2048);
 	s_connections = (struct login_connection * )malloc(MAX_CLIENT_CONNECTIONS * sizeof(struct login_connection));
 	for (int i=0;i<MAX_CLIENT_CONNECTIONS;++i)
@@ -87,7 +88,7 @@ bool fl_start_login_server()
 	//set server information
 	memset(&server_addr,0,sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons((uint16_t)fl_getenv("login_server_port",6666));
+	server_addr.sin_port = htons((uint16_t)fl_getenv("login_server_port",6600));
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);  //any ip is ok
 
 	//set socket reuse address
@@ -97,6 +98,7 @@ bool fl_start_login_server()
 	//bind server
 	if (-1 == (bind(s_listen_fd,(struct sockaddr*)&server_addr,sizeof(struct sockaddr))))
 	{
+		close(s_listen_fd);
 		fl_log(2, "login server bind error, errno:%d\n", errno);
 		fl_stop_login_server();
 	}
@@ -104,6 +106,7 @@ bool fl_start_login_server()
 	//listen server
 	if (-1 == listen(s_listen_fd, 1024))
 	{
+		close(s_listen_fd);
 		fl_log(2, "login server listen error, errno:%d\n", errno);
 		fl_stop_login_server();
 	}
@@ -117,6 +120,12 @@ bool fl_start_login_server()
 
 	s_run_state = 1;
 	fl_init_buffer();
+	if (false == s_start_backgate_server())
+	{
+		fl_log(2,"strt login backgate server failed..\n");
+		fl_stop_login_server();
+		return false;
+	}
 	s_login_server_loop();
 	fl_stop_login_server();
 	return true;
@@ -483,3 +492,132 @@ static void s_login_server_loop()
 
 	}   //end of while(true)
 }  //server main loop end
+
+static void * s_backgate_thread(void * arg);
+
+static int s_back_gate_listen_fd;
+static bool s_start_backgate_server()
+{
+	struct sockaddr_in server_addr;
+	s_back_gate_listen_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (-1 == s_back_gate_listen_fd)
+	{
+		fl_log(2, "login backgate server socket failed, errno:%d\n", errno);
+		return false;
+	}
+
+	//set server information
+	memset(&server_addr,0,sizeof(server_addr));
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons((uint16_t)fl_getenv("login_server_ctrl_port", 6601));
+	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);  //any ip is ok
+
+	//bind server
+	if (-1 == (bind(s_back_gate_listen_fd,(struct sockaddr*)&server_addr,sizeof(struct sockaddr))))
+	{
+		close(s_back_gate_listen_fd);
+		fl_log(2, "login backgate server bind error, errno:%d\n", errno);
+		return false;
+	}
+
+	//listen server
+	if (-1 == listen(s_back_gate_listen_fd, 1024))
+	{
+		close(s_back_gate_listen_fd);
+		fl_log(2, "login backgate server listen error, errno:%d\n", errno);
+		return false;
+	}
+
+	char * addr_tmp;
+	uint16_t port_tmp;
+	addr_tmp = inet_ntoa(server_addr.sin_addr);
+	port_tmp = ntohs(server_addr.sin_port);
+
+	fl_log(0,"login backgate server listen on %s : %d\n", addr_tmp, port_tmp);
+
+	pthread_t tid;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	pthread_create(&tid, &attr, s_backgate_thread, NULL);
+	return true;
+}
+
+static void * s_backgate_thread(void * arg)
+{
+	//start main loop
+	fd_set readset;
+	int maxfd = -1, selectn = 0, clientfd;
+	struct timeval tv;
+	while (true)
+	{
+		if (s_run_state != 0) break;
+		maxfd = -1;
+		FD_ZERO(&readset);
+		FD_SET(s_listen_fd, &readset);
+		maxfd = s_listen_fd > maxfd ? s_listen_fd : maxfd;
+
+		tv.tv_sec = 0;
+		tv.tv_usec = 1000000;  //1S
+		selectn = select(maxfd + 1, &readset, NULL, NULL, &tv);
+
+		if (selectn <= 0)
+		{
+			if (selectn < 0)
+			{
+				fl_log(2,"select error, errno:%d\n", errno);
+			}
+			continue;
+		}
+
+		clientfd = -1;
+
+		if (FD_ISSET(s_listen_fd,&readset))
+		{
+			//new client
+			clientfd = accept(s_listen_fd,(struct sockaddr*)&client_addr,&client_len);
+			if (-1 == clientfd)
+			{
+				fl_log(2,"Accept client error,errno = %d\n",errno);
+			}
+			else
+			{
+				i = s_conn_bit_record.GetUnSetBitPosition();
+				if (-1 != i)
+				{
+					s_conn_bit_record.SetBit(i);
+					fl_log(1,"Accept client %d,client index = %d\n", clientfd, i);
+					s_connections[i].session = ++s_session;
+					s_connections[i].fd= clientfd;
+					s_connections[i].addr = client_addr;
+					if (s_session > 0XFFFFFFFE)
+					{
+						s_session = 0;
+					}
+				}
+			}
+			--selectn;
+		}
+
+		if (selectn > 0)
+		{
+			for (i=0;i<MAX_CLIENT_CONNECTIONS;++i)
+			{
+				if (-1 == s_connections[i].fd) continue;
+				if (clientfd == s_connections[i].fd) continue;
+				if (FD_ISSET(s_connections[i].fd, &readset))
+				{
+					if (false == s_read_bit_record.IsSetBit(i))
+					{
+						s_read_bit_record.SetBit(i);
+						s_read_msg_queue.push_message(i);
+					}
+					--selectn;
+				}
+				if (0 == selectn) break;
+			}
+		}
+
+	}
+	pthread_exit(0);
+}
