@@ -20,6 +20,8 @@ static void s_backgate_handle_message(struct fl_message_data * message);
 static int s_backgate_listen_fd;
 static class fl_connection * s_backgate_connections;
 static int s_run_state = 0;
+static int MAX_MESSAGE_LENGTH = 2097152;
+
 bool fl_start_login_backgate_server()
 {
 	struct sockaddr_in server_addr;
@@ -47,7 +49,7 @@ bool fl_start_login_backgate_server()
 	//listen server
 	if (-1 == listen(s_backgate_listen_fd, 1024))
 	{
-		close(s_back_gate_listen_fd);
+		close(s_backgate_listen_fd);
 		fl_log(2, "login backgate server listen error, errno:%d\n", errno);
 		return false;
 	}
@@ -58,6 +60,8 @@ bool fl_start_login_backgate_server()
 	port_tmp = ntohs(server_addr.sin_port);
 
 	fl_log(0,"login backgate server listen on %s : %d\n", addr_tmp, port_tmp);
+
+	MAX_MESSAGE_LENGTH = fl_getenv("message_max_length", 131072);
 
 	s_backgate_connections = new fl_connection[32]();
 	for (int i=0;i<32;++i)
