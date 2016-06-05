@@ -56,7 +56,7 @@ public:
 	void SetRecvCallBack(CallBack callback);
 	void SetAddrInfo(struct sockaddr_in * addr);
 	int GetSockfd();
-	int GetSession();
+	uint32_t GetSession();
 	bool Recv();
 	bool Send(const char * data, int len);
 	void Close();

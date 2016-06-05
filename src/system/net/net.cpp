@@ -403,7 +403,7 @@ int fl_connection::GetSockfd()
 	return sockfd;
 }
 
-int fl_connection::GetSession()
+uint32_t fl_connection::GetSession()
 {
 	return session;
 }

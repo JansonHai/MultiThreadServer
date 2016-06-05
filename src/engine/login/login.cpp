@@ -150,14 +150,14 @@ static void s_recv_data_callback(struct fl_message_data * message)
 
 static void * s_read_thread(void * arg)
 {
-	int index, readLeft, readn, length;
+	int index = -1;
 	bool result;
 	class fl_connection * conn = NULL;
 	while (true)
 	{
 		if (0 == s_run_state) break;
 		result = s_read_msg_queue.pop_message(index);
-		if (false == result)
+		if (false == result || -1 == index)
 		{
 			usleep(10000);  //10ms;
 			continue;
@@ -186,7 +186,7 @@ static void * s_work_thread(void * arg)
 		if (0 == s_run_state) break;
 		message = NULL;
 		result = s_work_msg_queue.pop_message(message);
-		if (false == result)
+		if (false == result || NULL == message)
 		{
 			usleep(10000);  //10ms;
 			continue;
