@@ -149,7 +149,7 @@ void fl_connection::SetRecvCallBack(CallBack callback)
 bool fl_connection::Recv()
 {
 	pthread_rwlock_rdlock(&rwlock);
-	int index, readLeft, readn, length, tryContinueTime;
+	int readLeft, readn, length, tryContinueTime;
 	bool ret;
 	if (-1 == sockfd)
 	{

@@ -3,60 +3,30 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <stdint.h>
+#include <pthread.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 #include "gate.h"
 #include "logger.h"
+#include "buffer.h"
+#include "ByteArray.h"
+#include "BitRecord.h"
+#include "MsgQueue.h"
+#include "envirment.h"
 
-static int s_gate_pid = 0;
-static int s_gate_pipe[2];
+static int s_listen_fd = -1;
+static int s_gate_server_pid = -1;
+static int s_run_state = 0;
+static int MAX_CLIENT_CONNECTIONS = 2048;
+static int MAX_MESSAGE_LENGTH = 2097152;
 
-static void s_start_net_gate_logic();
-static void s_start_net_gate_loop();
-static bool s_run_state = false;
+static class BitRecord s_conn_bit_record;
+static class BitRecord s_read_bit_record;
+static class MsgQueue<int> s_read_msg_queue;
+static class MsgQueue<struct fl_message_data *> s_work_msg_queue;
+static class fl_connection * s_connections;
+static pthread_mutex_t s_close_mutex;
 
-bool fl_start_net_gate_server()
-{
-	int ret = pipe(s_gate_pipe);
-	if (ret < 0)
-	{
-		fl_log(2,"start gate pipe failed,errno = %d\n", errno);
-		return false;
-	}
-
-	s_gate_pid = fork();
-	if (s_gate_pid < 0)
-	{
-		fl_log(2,"fork gate child process failed,errno = %d\n", errno);
-		return false;
-	}
-
-	if (s_gate_pid > 0)
-	{
-		//parent close read
-		fl_log(2,"fork gate child process successfully,pid = %d\n", s_gate_pid);
-		close(s_gate_pipe[0]);
-		return true;
-	}
-
-	//child close write
-	close(s_gate_pipe[1]);
-	s_run_state = true;
-	s_start_net_gate_logic();
-	_exit(0);
-	return true;
-}
-
-static void s_start_net_gate_logic()
-{
-
-	s_start_net_gate_loop();
-}
-
-static void s_start_net_gate_loop()
-{
-	while (s_run_state)
-	{
-		sleep(1);
-	}
-}
-
-
+static void s_gate_server_loop();
+static void s_recv_data_callback(struct fl_message_data * message);
