@@ -117,8 +117,6 @@ fl_connection::fl_connection()
 
 fl_connection::~fl_connection()
 {
-	free(rbuf);
-	free(wbuf);
 	pthread_rwlock_destroy(&rwlock);
 }
 
@@ -195,14 +193,14 @@ bool fl_connection::Recv()
 					else
 					{
 						ret = true;
-						goto _read_thread_loop_end;
+						goto _read_end;
 					}
 				}
 				else
 				{
 					ret = false;
 					fl_log(2,"client %d,session %u recv header error,errno: %d\n",sockfd, session, errno);
-					goto _read_thread_loop_end;
+					goto _read_end;
 				}
 			}
 			recv_message->headerReadLength += readn;
@@ -330,7 +328,7 @@ bool fl_connection::Send(const char * data, int len)
 	if (-1 == sockfd)
 	{
 		ret = false;
-		goto _write_end;
+		goto _send_end;
 	}
 
 	union _Int32 header;
@@ -344,7 +342,7 @@ bool fl_connection::Send(const char * data, int len)
 		{
 			ret = false;
 			fl_log(2,"send header failed, client %d,session %u closed\n", sockfd, session);
-			goto _read_end;
+			goto _send_end;
 		}
 		else if (-1 == sendn)
 		{
@@ -356,7 +354,7 @@ bool fl_connection::Send(const char * data, int len)
 			{
 				ret = false;
 				fl_log(2,"client %d,session %u send header error,errno: %d\n", sockfd, session, errno);
-				goto _read_thread_loop_end;
+				goto _send_end;
 			}
 		}
 		headerSended += sendn;
@@ -369,7 +367,7 @@ bool fl_connection::Send(const char * data, int len)
 		{
 			ret = false;
 			fl_log(2,"send data failed, client %d,session %u closed\n", sockfd, session);
-			goto _read_end;
+			goto _send_end;
 		}
 		else if (-1 == sendn)
 		{
@@ -381,7 +379,7 @@ bool fl_connection::Send(const char * data, int len)
 			{
 				ret = false;
 				fl_log(2,"client %d,session %u send data error,errno: %d\n", sockfd, session, errno);
-				goto _read_thread_loop_end;
+				goto _send_end;
 			}
 		}
 		data += sendn;
@@ -390,7 +388,7 @@ bool fl_connection::Send(const char * data, int len)
 
 	ret = true;
 
-	_write_end:
+	_send_end:
 	pthread_rwlock_unlock(&rwlock);
 	return ret;
 }

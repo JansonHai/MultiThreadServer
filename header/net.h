@@ -69,6 +69,6 @@ struct fl_backgate_data
 	uint32_t session;
 	bool isAuth;
 
-}
+};
 
 #endif /* SRC_NET_H_ */
