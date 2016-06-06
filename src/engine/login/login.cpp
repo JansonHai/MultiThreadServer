@@ -29,12 +29,22 @@ static class MsgQueue<struct fl_message_data *> s_work_msg_queue;
 static class fl_connection * s_connections;
 static pthread_mutex_t s_close_mutex;
 
+static int s_net_gate_server_fd = -1;
+
 static void s_login_server_loop();
 static void s_recv_data_callback(struct fl_message_data * message);
+static bool s_connect_to_gate_server();
 
 void fl_stop_login_server()
 {
-	close(s_listen_fd);
+	if (-1 != s_listen_fd)
+	{
+		close(s_listen_fd);
+	}
+	if (-1 != s_net_gate_server_fd)
+	{
+		close(s_net_gate_server_fd);
+	}
 	s_run_state = 0;
 	fl_stop_login_watchdog_server();
 	usleep(1000000 * 3);  //3S
@@ -128,8 +138,43 @@ bool fl_start_login_server()
 		fl_stop_login_server();
 		return false;
 	}
+
+	if (false == s_connect_to_gate_server())
+	{
+		fl_log(2,"strt login watchdog server failed..\n");
+		fl_stop_login_server();
+		return false;
+	}
+
 	s_login_server_loop();
 	fl_stop_login_server();
+	return true;
+}
+
+static bool s_connect_to_gate_server()
+{
+	s_net_gate_server_fd = socket(AF_INET,SOCK_STREAM,0);
+	if (-1 == s_net_gate_server_fd)
+	{
+		client_log(2,"login server create connect socket failed, errno: %d\n", errno);
+		return false;
+	}
+
+	struct sockaddr_in server_addr;
+
+	const char * ip = fl_getenv("gate_server_ip", "127.0.0.1");
+	int port = fl_getenv("gate_server_ctrl_port", 6701);
+
+	memset(&server_addr,0,sizeof(server_addr));
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(port);
+	server_addr.sin_addr.s_addr = inet_addr(ip);
+
+	if (-1 == connect(s_net_gate_server_fd,(struct sockaddr*)&server_addr, sizeof(struct sockaddr)))
+	{
+		client_log(2,"login server connect to gate server [%s:%d] failed, errno:%d\n", ip, port, errno);
+		return false;
+	}
 	return true;
 }
 

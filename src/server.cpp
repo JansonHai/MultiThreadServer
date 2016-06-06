@@ -37,9 +37,11 @@ void fl_server_start()
 
 	//step 2 start gate server
 	fl_start_net_gate_server();
+	sleep(1);
 
 	//step 3 start login server
 	fl_start_login_server();
+	sleep(1);
 
 	fl_add_main_exit_handle(s_clear_server);
 
