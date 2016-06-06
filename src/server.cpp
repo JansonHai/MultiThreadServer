@@ -42,7 +42,6 @@ static void s_signal_handler(int s)
 
 void fl_server_start()
 {
-	fl_add_main_exit_handle(s_clear_server);
 
 	//step 1 start game logic server
 	//fl_start_game_logic_server
@@ -54,6 +53,8 @@ void fl_server_start()
 	fl_start_login_server();
 
 	signal(SIGINT,s_signal_handler);
+	fl_add_main_exit_handle(s_clear_server);
+
 }
 
 void fl_server_main_loop()

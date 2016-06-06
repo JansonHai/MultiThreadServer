@@ -31,14 +31,14 @@ void fl_logger_init()
 		const char * logPath = fl_getenv("log_path","./server.log");
 		int len = strlen(logPath);
 		const char *ch = logPath + len - 1;
-		int index = len - 1;
+		int index = len;
 		while (*ch != '/' && index > 0) --ch,--index;
 		if (index > 0)
 		{
 			char path[1024];
 			char buf[1024];
-			strncpy(path,logPath,index + 1);
-			path[index+2]=0;
+			strncpy(path,logPath,index);
+			path[index + 1] = '\0';
 			DIR * dir = opendir(path);
 			if (NULL == dir)
 			{
