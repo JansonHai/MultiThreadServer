@@ -36,7 +36,6 @@ void fl_main_exit()
 {
 	g_exit_flag = true;
 	fl_exit_log("doing clear,please wait...");
-	usleep(1000 * 1000 * 3);  //sleep 3 second wait other thread process
 	int i=0;
 	int len = (int)main_exit_handles.size();
 	struct fl_exit_handle * handle;
@@ -51,6 +50,7 @@ void fl_main_exit()
 		free(handle);//delete handle;
 	}
 	main_exit_handles.clear();
+	usleep(1000000 * 10);  //sleep 10 second wait other process clear handle
 	kill(0, SIGTERM);
 	exit(0);
 }
