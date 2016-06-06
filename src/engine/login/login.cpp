@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <signal.h>
 #include "login.h"
 #include "logger.h"
 #include "buffer.h"
@@ -60,6 +61,8 @@ bool fl_start_login_server()
 		fl_log(0,"login server fork successfully,pid = %d\n", s_login_server_pid);
 		return true;
 	}
+
+	signal(SIGINT, SIG_IGN);
 
 	struct sockaddr_in server_addr;
 	s_listen_fd = socket(AF_INET, SOCK_STREAM, 0);

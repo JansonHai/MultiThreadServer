@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <signal.h>
 #include "net.h"
 #include "gate.h"
 #include "logger.h"
@@ -47,6 +48,8 @@ bool fl_start_net_gate_server()
 		fl_log(0,"gate server fork successfully,pid = %d\n", s_gate_server_pid);
 		return true;
 	}
+
+	signal(SIGINT, SIG_IGN);
 
 	struct sockaddr_in server_addr;
 	s_listen_fd = socket(AF_INET, SOCK_STREAM, 0);
