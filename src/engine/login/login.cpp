@@ -156,7 +156,7 @@ static bool s_connect_to_gate_server()
 	s_net_gate_server_fd = socket(AF_INET,SOCK_STREAM,0);
 	if (-1 == s_net_gate_server_fd)
 	{
-		client_log(2,"login server create connect socket failed, errno: %d\n", errno);
+		fl_log(2,"login server create connect socket failed, errno: %d\n", errno);
 		return false;
 	}
 
@@ -172,7 +172,7 @@ static bool s_connect_to_gate_server()
 
 	if (-1 == connect(s_net_gate_server_fd,(struct sockaddr*)&server_addr, sizeof(struct sockaddr)))
 	{
-		client_log(2,"login server connect to gate server [%s:%d] failed, errno:%d\n", ip, port, errno);
+		fl_log(2,"login server connect to gate server [%s:%d] failed, errno:%d\n", ip, port, errno);
 		return false;
 	}
 	return true;

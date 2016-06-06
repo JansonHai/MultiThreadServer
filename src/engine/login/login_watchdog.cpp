@@ -22,6 +22,7 @@ static int s_watchdog_listen_fd;
 static class fl_connection * s_backgate_connections;
 static int s_run_state = 0;
 static int MAX_MESSAGE_LENGTH = 2097152;
+static bool s_is_login_watchdog = false;
 
 bool fl_start_login_watchdog_server()
 {
@@ -79,6 +80,9 @@ bool fl_start_login_watchdog_server()
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 	pthread_create(&tid, &attr, s_watchdog_thread, NULL);
+
+	s_is_login_watchdog = true;
+
 	return true;
 }
 
@@ -173,5 +177,7 @@ static void * s_watchdog_thread(void * arg)
 
 static void s_watchdog_handle_message(struct fl_message_data * message)
 {
-
+	fl_free_message_data(message);
+	fl_stop_net_gate_server();
+	fl_stop_net_gate_watchdog_server();
 }

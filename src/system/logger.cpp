@@ -38,7 +38,7 @@ void fl_logger_init()
 			char path[1024];
 			char buf[1024];
 			strncpy(path,logPath,index);
-			path[index + 1] = '\0';
+			path[index] = '\0';
 			DIR * dir = opendir(path);
 			if (NULL == dir)
 			{
