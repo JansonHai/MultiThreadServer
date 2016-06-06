@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include "net.h"
 #include "gate.h"
 #include "logger.h"
 #include "buffer.h"
@@ -28,21 +29,21 @@ bool fl_start_net_gate_watchdog_server()
 	s_watchdog_listen_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (-1 == s_watchdog_listen_fd)
 	{
-		fl_log(2, "login backgate server socket failed, errno:%d\n", errno);
+		fl_log(2, "gate watchdog server socket failed, errno:%d\n", errno);
 		return false;
 	}
 
 	//set server information
 	memset(&server_addr,0,sizeof(server_addr));
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons((uint16_t)fl_getenv("login_server_ctrl_port", 6601));
+	server_addr.sin_port = htons((uint16_t)fl_getenv("gate_server_ctrl_port", 6701));
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);  //any ip is ok
 
 	//bind server
 	if (-1 == (bind(s_watchdog_listen_fd,(struct sockaddr*)&server_addr,sizeof(struct sockaddr))))
 	{
 		close(s_watchdog_listen_fd);
-		fl_log(2, "login backgate server bind error, errno:%d\n", errno);
+		fl_log(2, "gate watchdog server bind error, errno:%d\n", errno);
 		return false;
 	}
 
@@ -50,7 +51,7 @@ bool fl_start_net_gate_watchdog_server()
 	if (-1 == listen(s_watchdog_listen_fd, 1024))
 	{
 		close(s_watchdog_listen_fd);
-		fl_log(2, "login backgate server listen error, errno:%d\n", errno);
+		fl_log(2, "gate watchdog server listen error, errno:%d\n", errno);
 		return false;
 	}
 
@@ -59,7 +60,7 @@ bool fl_start_net_gate_watchdog_server()
 	addr_tmp = inet_ntoa(server_addr.sin_addr);
 	port_tmp = ntohs(server_addr.sin_port);
 
-	fl_log(0,"login backgate server listen on %s : %d\n", addr_tmp, port_tmp);
+	fl_log(0,"gate watchdog server listen on %s : %d\n", addr_tmp, port_tmp);
 
 	MAX_MESSAGE_LENGTH = fl_getenv("message_max_length", 131072);
 

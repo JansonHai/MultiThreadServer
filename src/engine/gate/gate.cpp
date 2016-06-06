@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include "net.h"
 #include "gate.h"
 #include "logger.h"
 #include "buffer.h"
@@ -108,7 +109,7 @@ bool fl_start_net_gate_server()
 	if (false == fl_start_net_gate_watchdog_server())
 	{
 		fl_log(2,"strt gate watchdog server failed..\n");
-		fl_stop_login_server();
+		fl_stop_net_gate_server();
 		return false;
 	}
 	s_gate_server_loop();
