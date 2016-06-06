@@ -7,7 +7,7 @@
 #include <pthread.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include "login.h"
+#include "gate.h"
 #include "logger.h"
 #include "buffer.h"
 #include "ByteArray.h"
@@ -15,18 +15,18 @@
 #include "MsgQueue.h"
 #include "envirment.h"
 
-static void * s_backgate_thread(void * arg);
-static void s_backgate_handle_message(struct fl_message_data * message);
-static int s_backgate_listen_fd;
+static void * s_watchdog_thread(void * arg);
+static void s_watchdog_handle_message(struct fl_message_data * message);
+static int s_watchdog_listen_fd;
 static class fl_connection * s_backgate_connections;
 static int s_run_state = 0;
 static int MAX_MESSAGE_LENGTH = 2097152;
 
-bool fl_start_login_backgate_server()
+bool fl_start_net_gate_watchdog_server()
 {
 	struct sockaddr_in server_addr;
-	s_backgate_listen_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (-1 == s_backgate_listen_fd)
+	s_watchdog_listen_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (-1 == s_watchdog_listen_fd)
 	{
 		fl_log(2, "login backgate server socket failed, errno:%d\n", errno);
 		return false;
@@ -39,17 +39,17 @@ bool fl_start_login_backgate_server()
 	server_addr.sin_addr.s_addr = htonl(INADDR_ANY);  //any ip is ok
 
 	//bind server
-	if (-1 == (bind(s_backgate_listen_fd,(struct sockaddr*)&server_addr,sizeof(struct sockaddr))))
+	if (-1 == (bind(s_watchdog_listen_fd,(struct sockaddr*)&server_addr,sizeof(struct sockaddr))))
 	{
-		close(s_backgate_listen_fd);
+		close(s_watchdog_listen_fd);
 		fl_log(2, "login backgate server bind error, errno:%d\n", errno);
 		return false;
 	}
 
 	//listen server
-	if (-1 == listen(s_backgate_listen_fd, 1024))
+	if (-1 == listen(s_watchdog_listen_fd, 1024))
 	{
-		close(s_backgate_listen_fd);
+		close(s_watchdog_listen_fd);
 		fl_log(2, "login backgate server listen error, errno:%d\n", errno);
 		return false;
 	}
@@ -68,7 +68,7 @@ bool fl_start_login_backgate_server()
 	{
 		s_backgate_connections[i].SetIndex(i);
 		s_backgate_connections[i].SetMaxMessageLength(MAX_MESSAGE_LENGTH);
-		s_backgate_connections[i].SetRecvCallBack(s_backgate_handle_message);
+		s_backgate_connections[i].SetRecvCallBack(s_watchdog_handle_message);
 	}
 
 	s_run_state = 1;
@@ -77,13 +77,13 @@ bool fl_start_login_backgate_server()
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-	pthread_create(&tid, &attr, s_backgate_thread, NULL);
+	pthread_create(&tid, &attr, s_watchdog_thread, NULL);
 	return true;
 }
 
-void fl_stop_login_backgate_server()
+void fl_stop_net_gate_watchdog_server()
 {
-	close(s_backgate_listen_fd);
+	close(s_watchdog_listen_fd);
 	s_run_state = 0;
 	for (int i=0;i<32;++i)
 	{
@@ -92,7 +92,7 @@ void fl_stop_login_backgate_server()
 	delete [] s_backgate_connections;
 }
 
-static void * s_backgate_thread(void * arg)
+static void * s_watchdog_thread(void * arg)
 {
 	struct sockaddr_in client_addr;
 	socklen_t client_len = sizeof(struct sockaddr);
@@ -105,8 +105,8 @@ static void * s_backgate_thread(void * arg)
 		if (s_run_state == 0) break;
 		maxfd = -1;
 		FD_ZERO(&readset);
-		FD_SET(s_backgate_listen_fd, &readset);
-		maxfd = s_backgate_listen_fd > maxfd ? s_backgate_listen_fd : maxfd;
+		FD_SET(s_watchdog_listen_fd, &readset);
+		maxfd = s_watchdog_listen_fd > maxfd ? s_watchdog_listen_fd : maxfd;
 
 		tv.tv_sec = 0;
 		tv.tv_usec = 1000000;  //1S
@@ -123,10 +123,10 @@ static void * s_backgate_thread(void * arg)
 
 		clientfd = -1;
 
-		if (FD_ISSET(s_backgate_listen_fd, &readset))
+		if (FD_ISSET(s_watchdog_listen_fd, &readset))
 		{
 			//new client
-			clientfd = accept(s_backgate_listen_fd,(struct sockaddr*)&client_addr,&client_len);
+			clientfd = accept(s_watchdog_listen_fd,(struct sockaddr*)&client_addr,&client_len);
 			if (-1 == clientfd)
 			{
 				fl_log(2,"Accept client error,errno = %d\n",errno);
@@ -170,7 +170,7 @@ static void * s_backgate_thread(void * arg)
 	pthread_exit(0);
 }
 
-static void s_backgate_handle_message(struct fl_message_data * message)
+static void s_watchdog_handle_message(struct fl_message_data * message)
 {
 
 }

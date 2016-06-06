@@ -22,6 +22,7 @@
 #include "database.h"
 #include "envirment.h"
 #include "login.h"
+#include "gate.h"
 
 static void s_clear_server(void * arg)
 {
@@ -36,7 +37,7 @@ void fl_server_start()
 	//fl_start_game_logic_server
 
 	//step 2 start gate server
-	//fl_start_gate_server
+	fl_start_net_gate_server();
 
 	//step 3 start login server
 	fl_start_login_server();

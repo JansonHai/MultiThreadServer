@@ -35,8 +35,8 @@ void fl_stop_login_server()
 {
 	close(s_listen_fd);
 	s_run_state = 0;
-	fl_stop_login_backgate_server();
-	usleep(1000000 * 5);  //5S
+	fl_stop_login_watchdog_server();
+	usleep(1000000 * 3);  //3S
 	for (int i=0; i<MAX_CLIENT_CONNECTIONS; ++i)
 	{
 		s_connections[i].Close();
@@ -119,9 +119,9 @@ bool fl_start_login_server()
 
 	s_run_state = 1;
 	fl_init_buffer();
-	if (false == fl_start_login_backgate_server())
+	if (false == fl_start_login_watchdog_server())
 	{
-		fl_log(2,"strt login backgate server failed..\n");
+		fl_log(2,"strt login watchdog server failed..\n");
 		fl_stop_login_server();
 		return false;
 	}
@@ -130,7 +130,7 @@ bool fl_start_login_server()
 	return true;
 }
 
-void fl_send_message_to_client(int index, uint32_t session, const char * data, int length)
+void fl_login_send_message_to_client(int index, uint32_t session, const char * data, int length)
 {
 	class fl_connection * conn = &s_connections[index];
 	if (conn->GetSession() == session)
@@ -217,9 +217,6 @@ static void s_login_server_loop()
 	socklen_t client_len = sizeof(struct sockaddr);
 	uint32_t session = 0;
 
-	fprintf(stdout, "starting main loop\n");
-	fl_log(0, "starting main loop\n");
-
 	pthread_t tid;
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
@@ -242,6 +239,7 @@ static void s_login_server_loop()
 		pthread_create(&tid, &attr, s_work_thread, NULL);
 	}
 
+	fl_log(0,"starting login loop");
 	while (true)
 	{
 		if (0 == s_run_state) break;
@@ -292,7 +290,7 @@ static void s_login_server_loop()
 				if (-1 != i)
 				{
 					s_conn_bit_record.SetBit(i);
-					fl_log(1,"Accept client %d,client index = %d\n", clientfd, i);
+					fl_log(1,"[login]:Accept client %d,client index = %d\n", clientfd, i);
 					s_connections[i].SetSocketInfo(clientfd, ++session);
 					s_connections[i].SetAddrInfo(&client_addr);
 					if (session > 0XFFFFFFFE)

@@ -20,9 +20,9 @@ struct login_connection
 
 bool fl_start_login_server();
 void fl_stop_login_server();
-void fl_send_message_to_client(int index, uint32_t session, const char * data, int length);
-bool fl_start_login_backgate_server();
-void fl_stop_login_backgate_server();
+void fl_login_send_message_to_client(int index, uint32_t session, const char * data, int length);
+bool fl_start_login_watchdog_server();
+void fl_stop_login_watchdog_server();
 
 
 #endif /* SRC_ENGINE_LOGIN_H_ */
