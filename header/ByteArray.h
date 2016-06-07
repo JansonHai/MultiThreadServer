@@ -64,7 +64,7 @@ public:
 	bool WriteUInt64(uint64_t ui64);
 	bool WriteFloat(float f);
 	bool WriteDouble(double d);
-	bool WriteString(const char * str);
+	bool WriteString(const char * str, int len);
 
 };
 

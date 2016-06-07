@@ -394,7 +394,7 @@ std::string ReadByteArray::ReadString()
 		}
 		char * buf = &m_buffer->buffer[m_cur_pos];
 		m_cur_pos += len;
-		struct fl_buffer * tmp = fl_malloc(len);
+		struct fl_buffer * tmp = fl_malloc(len + 1);
 		memcpy(tmp->buffer, buf, len);
 		tmp->buffer[len] = '\0';
 		std::string ret((char * )tmp->buffer);

@@ -107,7 +107,10 @@ int WriteByteArray::GetArraySize()
 
 void WriteByteArray::ReleaseBuffer()
 {
-	fl_free(m_buffer);
+	if (NULL != m_buffer)
+	{
+		fl_free(m_buffer);
+	}
 	m_buffer = NULL;
 	m_size = 0;
 }
@@ -421,9 +424,8 @@ bool WriteByteArray::WriteDouble(double d)
 	return true;
 }
 
-bool WriteByteArray::WriteString(const char * str)
+bool WriteByteArray::WriteString(const char * str, int len)
 {
-	int len = strlen(str);
 	if (m_size + len + 4 > m_buffer->size)
 	{
 		int size = m_buffer->size << 1;

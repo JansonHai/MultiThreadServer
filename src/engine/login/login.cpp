@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <string>
 #include <errno.h>
 #include <stdint.h>
 #include <pthread.h>
@@ -29,7 +30,7 @@ static class MsgQueue<struct fl_message_data *> s_work_msg_queue;
 static class fl_connection * s_connections;
 static pthread_mutex_t s_close_mutex;
 
-static int s_net_gate_server_fd = -1;
+static class fl_connection gate_conn;
 
 static void s_login_server_loop();
 static void s_recv_data_callback(struct fl_message_data * message);
@@ -41,10 +42,7 @@ void fl_stop_login_server()
 	{
 		close(s_listen_fd);
 	}
-	if (-1 != s_net_gate_server_fd)
-	{
-		close(s_net_gate_server_fd);
-	}
+	gate_conn.Close();
 	s_run_state = 0;
 	fl_stop_login_watchdog_server();
 	usleep(1000000 * 3);  //3S
@@ -151,10 +149,11 @@ bool fl_start_login_server()
 	return true;
 }
 
+
 static bool s_connect_to_gate_server()
 {
-	s_net_gate_server_fd = socket(AF_INET,SOCK_STREAM,0);
-	if (-1 == s_net_gate_server_fd)
+	int net_gate_server_fd = socket(AF_INET,SOCK_STREAM,0);
+	if (-1 == net_gate_server_fd)
 	{
 		fl_log(2,"login server create connect socket failed, errno: %d\n", errno);
 		return false;
@@ -170,12 +169,20 @@ static bool s_connect_to_gate_server()
 	server_addr.sin_port = htons(port);
 	server_addr.sin_addr.s_addr = inet_addr(ip);
 
-	if (-1 == connect(s_net_gate_server_fd,(struct sockaddr*)&server_addr, sizeof(struct sockaddr)))
+	if (-1 == connect(net_gate_server_fd,(struct sockaddr*)&server_addr, sizeof(struct sockaddr)))
 	{
 		fl_log(2,"login server connect to gate server [%s:%d] failed, errno:%d\n", ip, port, errno);
 		return false;
 	}
+	gate_conn.SetIndex(0);
+	gate_conn.SetAddrInfo(&server_addr);
+	gate_conn.SetSocketInfo(net_gate_server_fd, 1);
 	return true;
+}
+
+static void s_login_send_message_to_gate(const char * data, int length)
+{
+	gate_conn.Send(data, length);
 }
 
 void fl_login_send_message_to_client(int index, uint32_t session, const char * data, int length)
@@ -228,7 +235,11 @@ static void * s_work_thread(void * arg)
 	bool result;
 	struct fl_message_data * message;
 	class fl_connection * conn;
-	ReadByteArray * readByteArray;
+	ReadByteArray readByteArray;
+	WriteByteArray writeByteArray;
+	std::string account;
+	std::string password;
+	char tmpBuf[2048];
 	while (true)
 	{
 		if (0 == s_run_state) break;
@@ -249,8 +260,19 @@ static void * s_work_thread(void * arg)
 		}
 
 		//handle
-		readByteArray = new ReadByteArray();
-		readByteArray->SetReadContent(message->data, message->length);
+		readByteArray.SetReadContent(message->data, message->length);
+		account = readByteArray.ReadString();
+		password = readByteArray.ReadString();
+		readByteArray.ReleaseBuffer();
+
+		snprintf(tmpBuf,sizeof(tmpBuf),"client,%s,12345",account.c_str());
+
+		writeByteArray.InitBuffer(2048);
+		writeByteArray.ResetWrite();
+		writeByteArray.WriteString(tmpBuf, strlen(tmpBuf));
+		s_login_send_message_to_gate(writeByteArray.GetBuffer(), writeByteArray.GetArraySize());
+		writeByteArray.ReleaseBuffer();
+
 		fl_free_message_data(message);
 		message = NULL;
 	}
