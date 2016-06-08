@@ -163,6 +163,7 @@ static void * s_watchdog_thread(void * arg)
 				if (clientfd == s_backgate_connections[i].GetSockfd()) continue;
 				if (FD_ISSET(s_backgate_connections[i].GetSockfd(), &readset))
 				{
+					fl_debug_log("[Login_Watchdog]: client %d receiveing message",s_backgate_connections[i].GetSockfd());
 					if (false == s_backgate_connections[i].Recv())
 					{
 						s_backgate_connections[i].Close();
@@ -180,6 +181,7 @@ static void * s_watchdog_thread(void * arg)
 static std::vector<std::string> msg;
 static void s_watchdog_handle_message(struct fl_message_data * message)
 {
+	fl_debug_log("[Login_Watchdog]: client %d message handle", message->fd);
 	ReadByteArray readByteArray;
 	readByteArray.SetReadContent(message->data, message->length);
 

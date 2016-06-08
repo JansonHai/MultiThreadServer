@@ -30,8 +30,13 @@ static class fl_connection gate_conn;
 
 static void s_clear_server(void * arg)
 {
-	login_conn.Send("shutdown",strlen("shutdown"));
-	gate_conn.Send("shutdown",strlen("shutdown"));
+	char str[128] = "shutdown";
+
+	fl_debug_log("Send shutdown to login");
+	login_conn.Send(str, strlen(str));
+
+	fl_debug_log("Send shutdown to gate");
+	gate_conn.Send(str, strlen(str));
 }
 
 void fl_server_start()
