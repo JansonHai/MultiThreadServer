@@ -186,10 +186,10 @@ static void s_watchdog_handle_message(struct fl_message_data * message)
 	char str[1024];
 	int j = 0;
 	int clientfd = message->fd;
-	std::string &tmp = readByteArray.ReadString();
+	std::string tmp = readByteArray.ReadString();
 	fl_free_message_data(message);
 	msg.clear();
-	char * ch = tmp.c_str();
+	const char * ch = tmp.c_str();
 	while (*ch != '\0')
 	{
 		if (*ch == ',')
@@ -217,5 +217,9 @@ static void s_watchdog_handle_message(struct fl_message_data * message)
 		fl_log(1,"[Gate_Watchdog]: receive a shutdown command from client %d,the Gate Server will shutdown\n", clientfd);
 		fl_stop_net_gate_server();
 		fl_stop_net_gate_watchdog_server();
+	}
+	else
+	{
+		fl_log(2,"[Gate_Watchdog]: Unknow command %s\n", msg[0].c_str());
 	}
 }

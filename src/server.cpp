@@ -48,8 +48,17 @@ void fl_server_start()
 	fl_start_login_server();
 	sleep(1);
 
-	s_connect_to_net_gate_watch_dog();
-	s_connect_to_login_watch_dog();
+	if (false == s_connect_to_net_gate_watch_dog())
+	{
+		fl_main_exit();
+	}
+	fl_log(0,"[Main] : connect to gate watchdog server successfully\n");
+
+	if (false == s_connect_to_login_watch_dog())
+	{
+		fl_main_exit();
+	}
+	fl_log(0,"[Main] : connect to login watchdog server successfully\n");
 
 	fl_add_main_exit_handle(s_clear_server);
 
