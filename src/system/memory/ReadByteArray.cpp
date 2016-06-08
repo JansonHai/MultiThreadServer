@@ -216,25 +216,25 @@ int32_t ReadByteArray::ReadInt32()
 		return (int32_t)0xffffffff;
 	}
 	union _Int32 i32;
-	i32.byte[0] = m_buffer->buffer[m_cur_pos++];
-	i32.byte[1] = m_buffer->buffer[m_cur_pos++];
-	i32.byte[2] = m_buffer->buffer[m_cur_pos++];
-	i32.byte[3] = m_buffer->buffer[m_cur_pos++];
-	i32.n = ntohl(i32.n);
-//	if (s_is_big_endian())
-//	{
-//		i32.byte[0] = m_buffer->buffer[m_cur_pos++];
-//		i32.byte[1] = m_buffer->buffer[m_cur_pos++];
-//		i32.byte[2] = m_buffer->buffer[m_cur_pos++];
-//		i32.byte[3] = m_buffer->buffer[m_cur_pos++];
-//	}
-//	else
-//	{
-//		i32.byte[3] = m_buffer->buffer[m_cur_pos++];
-//		i32.byte[2] = m_buffer->buffer[m_cur_pos++];
-//		i32.byte[1] = m_buffer->buffer[m_cur_pos++];
-//		i32.byte[0] = m_buffer->buffer[m_cur_pos++];
-//	}
+//	i32.byte[0] = m_buffer->buffer[m_cur_pos++];
+//	i32.byte[1] = m_buffer->buffer[m_cur_pos++];
+//	i32.byte[2] = m_buffer->buffer[m_cur_pos++];
+//	i32.byte[3] = m_buffer->buffer[m_cur_pos++];
+//	i32.n = ntohl(i32.n);
+	if (s_is_big_endian())
+	{
+		i32.byte[0] = m_buffer->buffer[m_cur_pos++];
+		i32.byte[1] = m_buffer->buffer[m_cur_pos++];
+		i32.byte[2] = m_buffer->buffer[m_cur_pos++];
+		i32.byte[3] = m_buffer->buffer[m_cur_pos++];
+	}
+	else
+	{
+		i32.byte[3] = m_buffer->buffer[m_cur_pos++];
+		i32.byte[2] = m_buffer->buffer[m_cur_pos++];
+		i32.byte[1] = m_buffer->buffer[m_cur_pos++];
+		i32.byte[0] = m_buffer->buffer[m_cur_pos++];
+	}
 	return i32.n;
 }
 
@@ -427,8 +427,6 @@ std::string ReadByteArray::ReadString()
 		memcpy(tmp->buffer, buf, len);
 		tmp->buffer[len] = '\0';
 		std::string ret(tmp->buffer);
-		fl_debug_log("read byte array c string:%s\n",tmp->buffer);
-		fl_debug_log("read byte array c++ string:%s\n",ret.c_str());
 		fl_free(tmp);
 		return ret;
 	}

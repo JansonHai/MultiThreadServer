@@ -186,26 +186,26 @@ bool WriteByteArray::WriteInt32(int32_t i32)
 		m_buffer = tmp;
 	}
 	union _Int32 t;
-	t.n = htonl(i32);
-	m_buffer->buffer[m_size++] = t.byte[0];
-	m_buffer->buffer[m_size++] = t.byte[1];
-	m_buffer->buffer[m_size++] = t.byte[2];
-	m_buffer->buffer[m_size++] = t.byte[3];
+	t.n = i32;
+//	m_buffer->buffer[m_size++] = t.byte[0];
+//	m_buffer->buffer[m_size++] = t.byte[1];
+//	m_buffer->buffer[m_size++] = t.byte[2];
+//	m_buffer->buffer[m_size++] = t.byte[3];
 
-//	if (s_is_big_endian())
-//	{
-//		m_buffer->buffer[m_size++] = t.byte[0];
-//		m_buffer->buffer[m_size++] = t.byte[1];
-//		m_buffer->buffer[m_size++] = t.byte[2];
-//		m_buffer->buffer[m_size++] = t.byte[3];
-//	}
-//	else
-//	{
-//		m_buffer->buffer[m_size++] = t.byte[3];
-//		m_buffer->buffer[m_size++] = t.byte[2];
-//		m_buffer->buffer[m_size++] = t.byte[1];
-//		m_buffer->buffer[m_size++] = t.byte[0];
-//	}
+	if (s_is_big_endian())
+	{
+		m_buffer->buffer[m_size++] = t.byte[0];
+		m_buffer->buffer[m_size++] = t.byte[1];
+		m_buffer->buffer[m_size++] = t.byte[2];
+		m_buffer->buffer[m_size++] = t.byte[3];
+	}
+	else
+	{
+		m_buffer->buffer[m_size++] = t.byte[3];
+		m_buffer->buffer[m_size++] = t.byte[2];
+		m_buffer->buffer[m_size++] = t.byte[1];
+		m_buffer->buffer[m_size++] = t.byte[0];
+	}
 	return true;
 }
 

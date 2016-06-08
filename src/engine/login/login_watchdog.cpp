@@ -199,12 +199,12 @@ static void s_watchdog_handle_message(struct fl_message_data * message)
 
 	int i,j;
 	char str[1024];
-	for (i=0;i<message->length;++i)
-	{
-		str[i] = message->data[i];
-	}
-	str[i] = 0;
-	fl_debug_log("[Login_Watchdog]: client %d message: %s\n", message->fd, str);
+//	for (i=0;i<message->length;++i)
+//	{
+//		str[i] = message->data[i];
+//	}
+//	str[i] = 0;
+//	fl_debug_log("[Login_Watchdog]: client %d message: %s\n", message->fd, str);
 	std::string tmp = readByteArray.ReadString();
 	int clientfd = message->fd;
 	fl_free_message_data(message);
