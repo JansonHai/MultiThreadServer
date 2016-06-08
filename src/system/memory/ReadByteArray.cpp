@@ -390,6 +390,7 @@ std::string ReadByteArray::ReadString()
 	{
 		if (0 == len || m_cur_pos + len > m_size)
 		{
+			fl_debug_log("read len=0 string\n");
 			return std::string("");
 		}
 		char * buf = &m_buffer->buffer[m_cur_pos];
@@ -397,7 +398,9 @@ std::string ReadByteArray::ReadString()
 		struct fl_buffer * tmp = fl_malloc(len + 1);
 		memcpy(tmp->buffer, buf, len);
 		tmp->buffer[len] = '\0';
-		std::string ret((char * )tmp->buffer);
+		std::string ret(tmp->buffer);
+		fl_debug_log("read byte array c string:%s\n",tmp->buffer);
+		fl_debug_log("read byte array c++ string:%s\n",ret.c_str());
 		fl_free(tmp);
 		return ret;
 	}

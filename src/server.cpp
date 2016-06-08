@@ -44,7 +44,9 @@ static void s_clear_server(void * arg)
 	login_conn.Send(wb.GetBuffer(), wb.GetArraySize());
 
 	fl_debug_log("Send shutdown to gate");
-	login_conn.Send(wb.GetBuffer(), wb.GetArraySize());
+	gate_conn.Send(wb.GetBuffer(), wb.GetArraySize());
+
+	wb.ReleaseBuffer();
 }
 
 void fl_server_start()
