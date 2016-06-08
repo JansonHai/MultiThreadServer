@@ -152,13 +152,14 @@ static void * s_watchdog_thread(void * arg)
 			{
 				for (i=0;i<32;++i)
 				{
-					if (-1 == s_backgate_connections[i].GetSockfd()) continue;
+					if (-1 != s_backgate_connections[i].GetSockfd()) continue;
 					s_backgate_connections[i].SetSocketInfo(clientfd, ++session);
 					s_backgate_connections[i].SetAddrInfo(&client_addr);
 					if (session > 0XFFFFFFFE)
 					{
 						session = 0;
 					}
+					fl_log(0,"[Gate_Watchdog]: Accept client from %s:%d,clientfd = %d\n",inet_ntoa(client_addr.sin_addr),ntohs(client_addr.sin_port),clientfd);
 					break;
 				}
 			}
