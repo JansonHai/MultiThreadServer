@@ -193,7 +193,7 @@ static void * s_watchdog_thread(void * arg)
 static std::vector<std::string> msg;
 static void s_watchdog_handle_message(struct fl_message_data * message)
 {
-	fl_debug_log("[Login_Watchdog]: client %d message handle", message->fd);
+	fl_debug_log("[Login_Watchdog]: client %d message handle,length = %d\n", message->fd, message->length);
 	ReadByteArray readByteArray;
 	readByteArray.SetReadContent(message->data, message->length);
 
@@ -204,7 +204,7 @@ static void s_watchdog_handle_message(struct fl_message_data * message)
 	fl_free_message_data(message);
 	msg.clear();
 	const char * ch = tmp.c_str();
-	fl_debug_log("[Login_Watchdog]: client %d message: %s\n", tmp.c_str());
+	fl_debug_log("[Login_Watchdog]: client %d message: %s\n", clientfd, tmp.c_str());
 	while (*ch != '\0')
 	{
 		if (*ch == ',')
