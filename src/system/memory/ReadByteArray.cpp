@@ -2,6 +2,7 @@
 #include <string>
 #include <string.h>
 #include <stdint.h>
+#include <netinet/in.h>
 #include "ByteArray.h"
 #include "logger.h"
 #include "buffer.h"
@@ -78,7 +79,7 @@ union _Double
 union utype
 {
 	unsigned short n;
-	char a[2];
+	unsigned char a[2];
 };
 
 //对于0x12345678
@@ -215,20 +216,25 @@ int32_t ReadByteArray::ReadInt32()
 		return (int32_t)0xffffffff;
 	}
 	union _Int32 i32;
-	if (s_is_big_endian())
-	{
-		i32.byte[3] = m_buffer->buffer[m_cur_pos++];
-		i32.byte[2] = m_buffer->buffer[m_cur_pos++];
-		i32.byte[1] = m_buffer->buffer[m_cur_pos++];
-		i32.byte[0] = m_buffer->buffer[m_cur_pos++];
-	}
-	else
-	{
-		i32.byte[0] = m_buffer->buffer[m_cur_pos++];
-		i32.byte[1] = m_buffer->buffer[m_cur_pos++];
-		i32.byte[2] = m_buffer->buffer[m_cur_pos++];
-		i32.byte[3] = m_buffer->buffer[m_cur_pos++];
-	}
+	i32.byte[0] = m_buffer->buffer[m_cur_pos++];
+	i32.byte[1] = m_buffer->buffer[m_cur_pos++];
+	i32.byte[2] = m_buffer->buffer[m_cur_pos++];
+	i32.byte[3] = m_buffer->buffer[m_cur_pos++];
+	i32.n = ntohl(i32.n);
+//	if (s_is_big_endian())
+//	{
+//		i32.byte[0] = m_buffer->buffer[m_cur_pos++];
+//		i32.byte[1] = m_buffer->buffer[m_cur_pos++];
+//		i32.byte[2] = m_buffer->buffer[m_cur_pos++];
+//		i32.byte[3] = m_buffer->buffer[m_cur_pos++];
+//	}
+//	else
+//	{
+//		i32.byte[3] = m_buffer->buffer[m_cur_pos++];
+//		i32.byte[2] = m_buffer->buffer[m_cur_pos++];
+//		i32.byte[1] = m_buffer->buffer[m_cur_pos++];
+//		i32.byte[0] = m_buffer->buffer[m_cur_pos++];
+//	}
 	return i32.n;
 }
 

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <netinet/in.h>
 #include "ByteArray.h"
 #include "logger.h"
 #include "buffer.h"
@@ -56,7 +57,7 @@ union _Double
 union utype
 {
 	unsigned short n;
-	char a[2];
+	unsigned char a[2];
 };
 
 //对于0x12345678
@@ -185,21 +186,26 @@ bool WriteByteArray::WriteInt32(int32_t i32)
 		m_buffer = tmp;
 	}
 	union _Int32 t;
-	t.n = i32;
-	if (s_is_big_endian())
-	{
-		m_buffer->buffer[m_size++] = t.byte[0];
-		m_buffer->buffer[m_size++] = t.byte[1];
-		m_buffer->buffer[m_size++] = t.byte[2];
-		m_buffer->buffer[m_size++] = t.byte[3];
-	}
-	else
-	{
-		m_buffer->buffer[m_size++] = t.byte[3];
-		m_buffer->buffer[m_size++] = t.byte[2];
-		m_buffer->buffer[m_size++] = t.byte[1];
-		m_buffer->buffer[m_size++] = t.byte[0];
-	}
+	t.n = htonl(i32);
+	m_buffer->buffer[m_size++] = t.byte[0];
+	m_buffer->buffer[m_size++] = t.byte[1];
+	m_buffer->buffer[m_size++] = t.byte[2];
+	m_buffer->buffer[m_size++] = t.byte[3];
+
+//	if (s_is_big_endian())
+//	{
+//		m_buffer->buffer[m_size++] = t.byte[0];
+//		m_buffer->buffer[m_size++] = t.byte[1];
+//		m_buffer->buffer[m_size++] = t.byte[2];
+//		m_buffer->buffer[m_size++] = t.byte[3];
+//	}
+//	else
+//	{
+//		m_buffer->buffer[m_size++] = t.byte[3];
+//		m_buffer->buffer[m_size++] = t.byte[2];
+//		m_buffer->buffer[m_size++] = t.byte[1];
+//		m_buffer->buffer[m_size++] = t.byte[0];
+//	}
 	return true;
 }
 
