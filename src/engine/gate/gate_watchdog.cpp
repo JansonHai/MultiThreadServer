@@ -115,6 +115,16 @@ static void * s_watchdog_thread(void * arg)
 		FD_SET(s_watchdog_listen_fd, &readset);
 		maxfd = s_watchdog_listen_fd > maxfd ? s_watchdog_listen_fd : maxfd;
 
+		for (i=0;i<32;++i)
+		{
+			clientfd = s_backgate_connections[i].GetSockfd();
+			if (-1 != clientfd)
+			{
+				FD_SET(clientfd, &readset);
+				if (clientfd > maxfd) maxfd = clientfd;
+			}
+		}
+
 		tv.tv_sec = 0;
 		tv.tv_usec = 1000000;  //1S
 		selectn = select(maxfd + 1, &readset, NULL, NULL, &tv);
