@@ -61,7 +61,8 @@ union utype
 };
 
 //对于0x12345678
-//大端：0x12 0x34 0x56 0x78
+//数组: 0    1    2    3
+//大端:0x12 0x34 0x56 0x78
 //小端:0x78 0x56 0x34 0x12
 //网络:0x12 0x34 0x56 0x78   即网络字节序为大端序
 static inline bool s_is_big_endian()
@@ -390,7 +391,7 @@ std::string ReadByteArray::ReadString()
 	{
 		if (0 == len || m_cur_pos + len > m_size)
 		{
-			fl_debug_log("read len=0 string\n");
+			fl_debug_log("read len=%d string\n", len);
 			return std::string("");
 		}
 		char * buf = &m_buffer->buffer[m_cur_pos];
