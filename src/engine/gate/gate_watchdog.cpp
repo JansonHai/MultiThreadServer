@@ -90,6 +90,7 @@ bool fl_start_net_gate_watchdog_server()
 
 void fl_stop_net_gate_watchdog_server()
 {
+	fl_debug_log("[Gate_Watchdog]: Stoping Gate watchdog Server\n");
 	close(s_watchdog_listen_fd);
 	s_run_state = 0;
 	for (int i=0;i<32;++i)
@@ -159,7 +160,7 @@ static void * s_watchdog_thread(void * arg)
 					{
 						session = 0;
 					}
-					fl_log(0,"[Gate_Watchdog]: Accept client from %s:%d,clientfd = %d\n",inet_ntoa(client_addr.sin_addr),ntohs(client_addr.sin_port),clientfd);
+					fl_debug_log("[Gate_Watchdog]: Accept client from %s:%d,clientfd = %d\n",inet_ntoa(client_addr.sin_addr),ntohs(client_addr.sin_port),clientfd);
 					break;
 				}
 			}

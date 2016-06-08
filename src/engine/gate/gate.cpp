@@ -122,6 +122,7 @@ bool fl_start_net_gate_server()
 
 void fl_stop_net_gate_server()
 {
+	fl_debug_log("[Gate]: Stoping Gate Server\n");
 	close(s_listen_fd);
 	s_run_state = 0;
 	fl_stop_net_gate_watchdog_server();
