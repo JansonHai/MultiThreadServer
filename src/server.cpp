@@ -30,6 +30,8 @@ static class fl_connection gate_conn;
 
 static void s_clear_server(void * arg)
 {
+	fl_exit_log("doing shutdown server clear\n");
+
 	char str[128] = "shutdown";
 
 	fl_debug_log("Send shutdown to login");

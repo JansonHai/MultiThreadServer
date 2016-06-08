@@ -37,9 +37,8 @@ void fl_main_exit()
 	g_exit_flag = true;
 	fl_exit_log("doing clear,please wait...");
 	int i=0;
-	int len = (int)main_exit_handles.size();
 	struct fl_exit_handle * handle;
-	for (i=0;i<len;++i)
+	for (i=main_exit_handles.size()-1;i>=0;--i)
 	{
 		handle = main_exit_handles[i];
 		handle->func(handle->args);
@@ -74,9 +73,8 @@ void fl_add_child_exit_handle(void (*func)(void * args),void * args, size_t size
 void fl_child_exit()
 {
 	int i=0;
-	int len = (int)main_exit_handles.size();
 	struct fl_exit_handle * handle;
-	for (i=0;i<len;++i)
+	for (i=child_exit_handles.size();i>=0;--i)
 	{
 		handle = child_exit_handles[i];
 		handle->func(handle->args);
