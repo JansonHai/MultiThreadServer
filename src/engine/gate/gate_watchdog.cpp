@@ -197,35 +197,30 @@ static void s_watchdog_handle_message(struct fl_message_data * message)
 	ReadByteArray readByteArray;
 	readByteArray.SetReadContent(message->data, message->length);
 
-	int i,j;
+	int i = 0;
 	char str[1024];
-//	for (i=0;i<message->length;++i)
-//	{
-//		str[i] = message->data[i];
-//	}
-//	str[i] = 0;
-//	fl_debug_log("[Login_Watchdog]: client %d message: %s\n", message->fd, str);
 	int clientfd = message->fd;
 	std::string tmp = readByteArray.ReadString();
 	fl_free_message_data(message);
 	msg.clear();
 	const char * ch = tmp.c_str();
 	fl_debug_log("[Gate_Watchdog]: client %d message: %s\n", clientfd, tmp.c_str());
-	j = 0;
 	while (*ch != '\0')
 	{
 		if (*ch == ',')
 		{
-			str[j] = '\0';
+			str[i] = '\0';
 			msg.push_back(std::string(str));
-			j = 0;
+			i = 0;
 		}
 		else
 		{
-			str[j++] = *ch;
+			str[i++] = *ch;
 		}
 		++ch;
 	}
+	str[i] = 0;
+	msg.push_back(std::string(str));
 
 	if (msg[0] == "client")
 	{
