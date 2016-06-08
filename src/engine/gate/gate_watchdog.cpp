@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
+#include <vector>
 #include <unistd.h>
 #include <errno.h>
 #include <stdint.h>
@@ -22,7 +24,7 @@ static int s_watchdog_listen_fd;
 static class fl_connection * s_backgate_connections;
 static int s_run_state = 0;
 static int MAX_MESSAGE_LENGTH = 2097152;
-static bol s_is_net_gate_watchdog = false;
+static bool s_is_net_gate_watchdog = false;
 
 bool fl_start_net_gate_watchdog_server()
 {
@@ -30,7 +32,7 @@ bool fl_start_net_gate_watchdog_server()
 	s_watchdog_listen_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (-1 == s_watchdog_listen_fd)
 	{
-		fl_log(2, "gate watchdog server socket failed, errno:%d\n", errno);
+		fl_log(2, "[Gate_Watchdog]: gate watchdog server socket failed, errno:%d\n", errno);
 		return false;
 	}
 
@@ -44,7 +46,7 @@ bool fl_start_net_gate_watchdog_server()
 	if (-1 == (bind(s_watchdog_listen_fd,(struct sockaddr*)&server_addr,sizeof(struct sockaddr))))
 	{
 		close(s_watchdog_listen_fd);
-		fl_log(2, "gate watchdog server bind error, errno:%d\n", errno);
+		fl_log(2, "[Gate_Watchdog]: gate watchdog server bind error, errno:%d\n", errno);
 		return false;
 	}
 
@@ -52,7 +54,7 @@ bool fl_start_net_gate_watchdog_server()
 	if (-1 == listen(s_watchdog_listen_fd, 1024))
 	{
 		close(s_watchdog_listen_fd);
-		fl_log(2, "gate watchdog server listen error, errno:%d\n", errno);
+		fl_log(2, "[Gate_Watchdog]: gate watchdog server listen error, errno:%d\n", errno);
 		return false;
 	}
 
@@ -61,7 +63,7 @@ bool fl_start_net_gate_watchdog_server()
 	addr_tmp = inet_ntoa(server_addr.sin_addr);
 	port_tmp = ntohs(server_addr.sin_port);
 
-	fl_log(0,"gate watchdog server listen on %s : %d\n", addr_tmp, port_tmp);
+	fl_log(0,"[Gate_Watchdog]: gate watchdog server listen on %s : %d\n", addr_tmp, port_tmp);
 
 	MAX_MESSAGE_LENGTH = fl_getenv("message_max_length", 131072);
 
@@ -121,7 +123,7 @@ static void * s_watchdog_thread(void * arg)
 		{
 			if (selectn < 0)
 			{
-				fl_log(2,"select error, errno:%d\n", errno);
+				fl_log(2,"[Gate_Watchdog]: select error, errno:%d\n", errno);
 			}
 			continue;
 		}
@@ -134,7 +136,7 @@ static void * s_watchdog_thread(void * arg)
 			clientfd = accept(s_watchdog_listen_fd,(struct sockaddr*)&client_addr,&client_len);
 			if (-1 == clientfd)
 			{
-				fl_log(2,"Accept client error,errno = %d\n",errno);
+				fl_log(2,"[Gate_Watchdog]: Accept client error,errno = %d\n",errno);
 			}
 			else
 			{
@@ -175,9 +177,45 @@ static void * s_watchdog_thread(void * arg)
 	pthread_exit(0);
 }
 
+static std::vector<std::string> msg;
 static void s_watchdog_handle_message(struct fl_message_data * message)
 {
+	ReadByteArray readByteArray;
+	readByteArray.SetReadContent(message->data, message->length);
+
+	char str[1024];
+	int j = 0;
+	int clientfd = message->fd;
+	std::string &tmp = readByteArray.ReadString();
 	fl_free_message_data(message);
-	fl_stop_login_server();
-	fl_stop_login_watchdog_server();
+	msg.clear();
+	char * ch = tmp.c_str();
+	while (*ch != '\0')
+	{
+		if (*ch == ',')
+		{
+			str[j] = '\0';
+			msg.push_back(std::string(str));
+			j = 0;
+		}
+		else
+		{
+			str[j++] = *ch;
+		}
+		++ch;
+	}
+
+	if (msg[0] == "client")
+	{
+		if (msg.size() != 3)
+		{
+			return;
+		}
+	}
+	else if (msg[0] == "shutdown")
+	{
+		fl_log(1,"[Gate_Watchdog]: receive a shutdown command from client %d,the Gate Server will shutdown\n", clientfd);
+		fl_stop_net_gate_server();
+		fl_stop_net_gate_watchdog_server();
+	}
 }
