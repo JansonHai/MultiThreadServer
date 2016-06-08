@@ -22,6 +22,7 @@
 #include "envirment.h"
 #include "login.h"
 #include "gate.h"
+#include "ByteArray.h"
 
 static bool s_connect_to_login_watch_dog();
 static bool s_connect_to_net_gate_watch_dog();
@@ -34,11 +35,16 @@ static void s_clear_server(void * arg)
 
 	char str[128] = "shutdown";
 
+	WriteByteArray wb;
+	wb.InitBuffer(1024);
+	wb.ResetWrite();
+	wb.WriteString("shutdown", strlen(str));
+
 	fl_debug_log("Send shutdown to login");
-	login_conn.Send(str, strlen(str));
+	login_conn.Send(wb.GetBuffer(), wb.GetArraySize());
 
 	fl_debug_log("Send shutdown to gate");
-	gate_conn.Send(str, strlen(str));
+	login_conn.Send(wb.GetBuffer(), wb.GetArraySize());
 }
 
 void fl_server_start()
