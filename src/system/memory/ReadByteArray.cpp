@@ -6,6 +6,27 @@
 #include "logger.h"
 #include "buffer.h"
 
+//#define Swap16(s) ((((s) & 0xff) << 8) | (((s) >> 8) & 0xff))
+//#define Swap32(l) (((l) >> 24) | \
+//		   (((l) & 0x00ff0000) >> 8)  | \
+//		   (((l) & 0x0000ff00) << 8)  | \
+//		   ((l) << 24))
+//#define Swap64(ll) (((ll) >> 56) | \
+//					(((ll) & 0x00ff000000000000) >> 40) | \
+//					(((ll) & 0x0000ff0000000000) >> 24) | \
+//					(((ll) & 0x000000ff00000000) >> 8)	| \
+//					(((ll) & 0x00000000ff000000) << 8)	| \
+//					(((ll) & 0x0000000000ff0000) << 24) | \
+//					(((ll) & 0x000000000000ff00) << 40) | \
+//					(((ll) << 56)))
+//
+//#define BigEndian_16(s) BigEndianTest() ? s : Swap16(s)
+//#define LittleEndian_16(s) BigEndianTest() ? Swap16(s) : s
+//#define BigEndian_32(l) BigEndianTest() ? l : Swap32(l)
+//#define LittleEndian_32(l) BigEndianTest() ? Swap32(l) : l
+//#define BigEndian_64(ll) BigEndianTest() ? ll : Swap64(ll)
+//#define LittleEndian_64(ll) BigEndianTest() ? Swap64(ll) : ll
+
 union _Int16
 {
 	char byte[2];
@@ -196,17 +217,17 @@ int32_t ReadByteArray::ReadInt32()
 	union _Int32 i32;
 	if (s_is_big_endian())
 	{
-		i32.byte[0] = m_buffer->buffer[m_cur_pos++];
-		i32.byte[1] = m_buffer->buffer[m_cur_pos++];
-		i32.byte[2] = m_buffer->buffer[m_cur_pos++];
 		i32.byte[3] = m_buffer->buffer[m_cur_pos++];
+		i32.byte[2] = m_buffer->buffer[m_cur_pos++];
+		i32.byte[1] = m_buffer->buffer[m_cur_pos++];
+		i32.byte[0] = m_buffer->buffer[m_cur_pos++];
 	}
 	else
 	{
-		i32.byte[3] = m_buffer->buffer[m_cur_pos++];
-		i32.byte[2] = m_buffer->buffer[m_cur_pos++];
-		i32.byte[1] = m_buffer->buffer[m_cur_pos++];
 		i32.byte[0] = m_buffer->buffer[m_cur_pos++];
+		i32.byte[1] = m_buffer->buffer[m_cur_pos++];
+		i32.byte[2] = m_buffer->buffer[m_cur_pos++];
+		i32.byte[3] = m_buffer->buffer[m_cur_pos++];
 	}
 	return i32.n;
 }
