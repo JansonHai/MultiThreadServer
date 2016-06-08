@@ -448,7 +448,7 @@ bool WriteByteArray::WriteString(const char * str, int len)
 	WriteInt32(len);
 	if (0 != len)
 	{
-		memcpy(m_buffer->buffer, str, len);
+		memcpy(m_buffer->buffer + m_size, str, len);
 		m_size += len;
 	}
 	return true;

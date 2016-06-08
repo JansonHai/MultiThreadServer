@@ -204,7 +204,7 @@ static void s_watchdog_handle_message(struct fl_message_data * message)
 		str[i] = message->data[i];
 	}
 	str[i] = 0;
-	fl_debug_log("[Login_Watchdog]: client %d message: %s\n", str);
+	fl_debug_log("[Login_Watchdog]: client %d message: %s\n", message->fd, str);
 	std::string tmp = readByteArray.ReadString();
 	int clientfd = message->fd;
 	fl_free_message_data(message);
