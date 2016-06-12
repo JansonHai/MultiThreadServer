@@ -7,27 +7,6 @@
 #include "logger.h"
 #include "buffer.h"
 
-//#define Swap16(s) ((((s) & 0xff) << 8) | (((s) >> 8) & 0xff))
-//#define Swap32(l) (((l) >> 24) | \
-//		   (((l) & 0x00ff0000) >> 8)  | \
-//		   (((l) & 0x0000ff00) << 8)  | \
-//		   ((l) << 24))
-//#define Swap64(ll) (((ll) >> 56) | \
-//					(((ll) & 0x00ff000000000000) >> 40) | \
-//					(((ll) & 0x0000ff0000000000) >> 24) | \
-//					(((ll) & 0x000000ff00000000) >> 8)	| \
-//					(((ll) & 0x00000000ff000000) << 8)	| \
-//					(((ll) & 0x0000000000ff0000) << 24) | \
-//					(((ll) & 0x000000000000ff00) << 40) | \
-//					(((ll) << 56)))
-//
-//#define BigEndian_16(s) BigEndianTest() ? s : Swap16(s)
-//#define LittleEndian_16(s) BigEndianTest() ? Swap16(s) : s
-//#define BigEndian_32(l) BigEndianTest() ? l : Swap32(l)
-//#define LittleEndian_32(l) BigEndianTest() ? Swap32(l) : l
-//#define BigEndian_64(ll) BigEndianTest() ? ll : Swap64(ll)
-//#define LittleEndian_64(ll) BigEndianTest() ? Swap64(ll) : ll
-
 union _Int16
 {
 	char byte[2];
@@ -184,7 +163,7 @@ char ReadByteArray::ReadInt8()
 {
 	if (m_cur_pos + 1 > m_size)
 	{
-		return (char)0xff;
+		return (char)0x00;
 	}
 	return (char)m_buffer->buffer[m_cur_pos++];
 }
@@ -193,7 +172,7 @@ int16_t ReadByteArray::ReadInt16()
 {
 	if (m_cur_pos + 2 > m_size)
 	{
-		return (int16_t)0xffff;
+		return (int16_t)0x0000;
 	}
 	union _Int16 i16;
 	if (s_is_big_endian())
@@ -213,14 +192,9 @@ int32_t ReadByteArray::ReadInt32()
 {
 	if (m_cur_pos + 4 > m_size)
 	{
-		return (int32_t)0xffffffff;
+		return (int32_t)0x00000000;
 	}
 	union _Int32 i32;
-//	i32.byte[0] = m_buffer->buffer[m_cur_pos++];
-//	i32.byte[1] = m_buffer->buffer[m_cur_pos++];
-//	i32.byte[2] = m_buffer->buffer[m_cur_pos++];
-//	i32.byte[3] = m_buffer->buffer[m_cur_pos++];
-//	i32.n = ntohl(i32.n);
 	if (s_is_big_endian())
 	{
 		i32.byte[0] = m_buffer->buffer[m_cur_pos++];
@@ -242,7 +216,7 @@ int64_t ReadByteArray::ReadInt64()
 {
 	if (m_cur_pos + 8 > m_size)
 	{
-		return (int64_t)0xffffffffffffffffLL;
+		return (int64_t)0x0000000000000000LL;
 	}
 	union _Int64 i64;
 	if (s_is_big_endian())
@@ -274,7 +248,7 @@ unsigned char ReadByteArray::ReadUInt8()
 {
 	if (m_cur_pos + 1 > m_size)
 	{
-		return (unsigned char)0xff;
+		return (unsigned char)0x00;
 	}
 	return (unsigned char)m_buffer->buffer[m_cur_pos++];
 }
@@ -283,7 +257,7 @@ uint16_t ReadByteArray::ReadUInt16()
 {
 	if (m_cur_pos + 2 > m_size)
 	{
-		return (uint16_t)0xffff;
+		return (uint16_t)0x0000;
 	}
 	union _UInt16 ui16;
 	if (s_is_big_endian())
@@ -303,7 +277,7 @@ uint32_t ReadByteArray::ReadUInt32()
 {
 	if (m_cur_pos + 4 > m_size)
 	{
-		return (uint32_t)0xffffffff;
+		return (uint32_t)0x00000000;
 	}
 	union _UInt32 ui32;
 	if (s_is_big_endian())
@@ -327,7 +301,7 @@ uint64_t ReadByteArray::ReadUInt64()
 {
 	if (m_cur_pos + 8 > m_size)
 	{
-		return (uint64_t)0xffffffffffffffffLL;
+		return (uint64_t)0x0000000000000000LL;
 	}
 	union _UInt64 ui64;
 	if (s_is_big_endian())
@@ -359,7 +333,7 @@ float ReadByteArray::ReadFloat()
 {
 	if (m_cur_pos + 4 > m_size)
 	{
-		return (float)0xffffffff;
+		return (float)0x00000000;
 	}
 	union _Float f;
 	if (s_is_big_endian())
@@ -383,7 +357,7 @@ double ReadByteArray::ReadDouble()
 {
 	if (m_cur_pos + 8 > m_size)
 	{
-		return (double)0xffffffffffffffffLL;
+		return (double)0x0000000000000000LL;
 	}
 	union _Double d;
 	if (s_is_big_endian())
@@ -414,25 +388,16 @@ double ReadByteArray::ReadDouble()
 std::string ReadByteArray::ReadString()
 {
 	int len = ReadInt32();
-	if (len != (int)0xffffffff)
-	{
-		if (0 == len || m_cur_pos + len > m_size)
-		{
-			fl_debug_log("read len=%d string\n", len);
-			return std::string("");
-		}
-		char * buf = &m_buffer->buffer[m_cur_pos];
-		m_cur_pos += len;
-		struct fl_buffer * tmp = fl_malloc(len + 1);
-		memcpy(tmp->buffer, buf, len);
-		tmp->buffer[len] = '\0';
-		std::string ret(tmp->buffer);
-		fl_free(tmp);
-		return ret;
-	}
-	else
+	if (len == (int)0x00000000 || m_cur_pos + len > m_size)
 	{
 		return std::string("");
 	}
-	return std::string("");
+	char * buf = &m_buffer->buffer[m_cur_pos];
+	m_cur_pos += len;
+	struct fl_buffer * tmp = fl_malloc(len + 1);
+	memcpy(tmp->buffer, buf, len);
+	tmp->buffer[len] = '\0';
+	std::string ret(tmp->buffer);
+	fl_free(tmp);
+	return ret;
 }
