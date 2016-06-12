@@ -175,7 +175,7 @@ static void * s_watchdog_thread(void * arg)
 				if (clientfd == s_backgate_connections[i].GetSockfd()) continue;
 				if (FD_ISSET(s_backgate_connections[i].GetSockfd(), &readset))
 				{
-					fl_debug_log("[Gate_Watchdog]: client %d receiveing message",s_backgate_connections[i].GetSockfd());
+					fl_debug_log("[Gate_Watchdog]: client %d receiveing message\n",s_backgate_connections[i].GetSockfd());
 					if (false == s_backgate_connections[i].Recv())
 					{
 						s_backgate_connections[i].Close();
