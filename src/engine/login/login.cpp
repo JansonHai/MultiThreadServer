@@ -16,6 +16,7 @@
 #include "BitRecord.h"
 #include "MsgQueue.h"
 #include "envirment.h"
+#include <lua.hpp>
 
 static int s_listen_fd = -1;
 static int s_login_server_pid = -1;

@@ -16,6 +16,7 @@
 #include "BitRecord.h"
 #include "MsgQueue.h"
 #include "envirment.h"
+#include "gamelogic.h"
 
 static int s_listen_fd = -1;
 static int s_gate_server_pid = -1;
@@ -26,7 +27,7 @@ static int MAX_MESSAGE_LENGTH = 2097152;
 static class BitRecord s_conn_bit_record;
 static class BitRecord s_read_bit_record;
 static class MsgQueue<int> s_read_msg_queue;
-static class MsgQueue<struct fl_message_data *> s_work_msg_queue;
+//static class MsgQueue<struct fl_message_data *> s_work_msg_queue;
 static class fl_connection * s_connections;
 static pthread_mutex_t s_close_mutex;
 
@@ -126,6 +127,7 @@ void fl_stop_net_gate_server()
 	close(s_listen_fd);
 	s_run_state = 0;
 	fl_stop_net_gate_watchdog_server();
+	fl_stop_gamelogic();
 	usleep(1000000 * 3);  //3S
 	for (int i=0; i<MAX_CLIENT_CONNECTIONS; ++i)
 	{
@@ -150,7 +152,8 @@ void fl_gate_send_message_to_client(int index, uint32_t session, const char * da
 
 static void s_recv_data_callback(struct fl_message_data * message)
 {
-	s_work_msg_queue.push_message(message);
+//	s_work_msg_queue.push_message(message);
+	fl_dispatch_message(&s_connections[message->index], message);
 }
 
 static void * s_read_thread(void * arg)
@@ -179,40 +182,40 @@ static void * s_read_thread(void * arg)
 	pthread_exit(0);
 }
 
-static void * s_work_thread(void * arg)
-{
-//	int index, readLeft, readn, length;
-	bool result;
-	struct fl_message_data * message;
-	class fl_connection * conn;
-	ReadByteArray * readByteArray;
-	while (true)
-	{
-		if (0 == s_run_state) break;
-		message = NULL;
-		result = s_work_msg_queue.pop_message(message);
-		if (false == result || NULL == message)
-		{
-			usleep(10000);  //10ms;
-			continue;
-		}
-
-		conn = &s_connections[message->index];
-		if (conn->GetSession() != message->session)
-		{
-			fl_free_message_data(message);
-			message = NULL;
-			continue;
-		}
-
-		//handle
-		readByteArray = new ReadByteArray();
-		readByteArray->SetReadContent(message->data, message->length);
-		fl_free_message_data(message);
-		message = NULL;
-	}
-	pthread_exit(0);
-}
+//static void * s_work_thread(void * arg)
+//{
+////	int index, readLeft, readn, length;
+//	bool result;
+//	struct fl_message_data * message;
+//	class fl_connection * conn;
+//	ReadByteArray * readByteArray;
+//	while (true)
+//	{
+//		if (0 == s_run_state) break;
+//		message = NULL;
+//		result = s_work_msg_queue.pop_message(message);
+//		if (false == result || NULL == message)
+//		{
+//			usleep(10000);  //10ms;
+//			continue;
+//		}
+//
+//		conn = &s_connections[message->index];
+//		if (conn->GetSession() != message->session)
+//		{
+//			fl_free_message_data(message);
+//			message = NULL;
+//			continue;
+//		}
+//
+//		//handle
+//		readByteArray = new ReadByteArray();
+//		readByteArray->SetReadContent(message->data, message->length);
+//		fl_free_message_data(message);
+//		message = NULL;
+//	}
+//	pthread_exit(0);
+//}
 
 static void s_gate_server_loop()
 {
@@ -238,11 +241,13 @@ static void s_gate_server_loop()
 		pthread_create(&tid, &attr, s_read_thread, NULL);
 	}
 
-	//create work thread
-	for (i=0;i<2;++i)
-	{
-		pthread_create(&tid, &attr, s_work_thread, NULL);
-	}
+	fl_start_gamelogic();
+
+//	//create work thread
+//	for (i=0;i<2;++i)
+//	{
+//		pthread_create(&tid, &attr, s_work_thread, NULL);
+//	}
 
 	fl_log(0,"starting gate loop");
 	while (true)
