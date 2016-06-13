@@ -1,6 +1,7 @@
 ROOT_DIR = $(shell pwd)
 SUBDIRS=$(shell ls -l | grep ^d | awk '{if ($$9 == "src") print $$9}')
 OBJS_DIR = $(ROOT_DIR)/objs
+LIB_DIR = $(ROOT_DIR)/libs
 BIN_DIR = $(ROOT_DIR)/bin
 #获取当前目录下的cpp文件集，放在变量CUR_SOURCE中
 CUR_SOURCE=${wildcard *.cpp}
@@ -11,7 +12,7 @@ CUR_OBJS=${patsubst %.cpp, $(OBJS_DIR)/%.o, $(CUR_SOURCE)}
 CC = g++
 CCFLAG = -Wall -lpthread -lmysqlclient -fkeep-inline-functions -I$(ROOT_DIR)/header -L/usr/lib64/mysql/ 
 
-export CC CCFLAG ROOT_DIR SUBDIRS OBJS_DIR BIN_DIR
+export CC CCFLAG ROOT_DIR SUBDIRS OBJS_DIR BIN_DIR LIB_DIR
 
 all : echo_objects $(SUBDIRS) $(CUR_OBJS) server
 
