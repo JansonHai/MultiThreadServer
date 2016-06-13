@@ -7,7 +7,6 @@
 #include "database.h"
 #include "envirment.h"
 
-
 static int MAX_SQL_CONNECTION = 256;
 static pthread_mutex_t * s_sql_lock;
 static bool * s_sql_flag;
