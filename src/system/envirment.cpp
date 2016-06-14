@@ -86,6 +86,46 @@ bool fl_reload_config(const char * configName)
 	return isReloadOk;
 }
 
+static void s_ParseValue(char * value)
+{
+	char tmp[1024];
+	char val[1024];
+	char key[1024];
+	strcpy(tmp,value);
+	const char * str;
+	char * ch;
+	int i,j;
+	i = 0;
+	while (*ch != '\0')
+	{
+		if ('$' == *ch && '(' == *(ch+1))
+		{
+			ch += 2;
+			j = 0;
+			while (*ch != '\0' && *ch != ')')
+			{
+				key[j++] = *ch;
+				++ch;
+			}
+			key[j++] = '\0';
+			if (')' == *ch) ++ch;
+			str = fl_getenv(key);
+			while (NULL != str && *str != '/0')
+			{
+				val[i++] = *str;
+				++str;
+			}
+		}
+		else
+		{
+			val[i++] = *ch;
+			++ch;
+		}
+	}
+	val[i++] = '\0';
+	strcpy(value,val);
+}
+
 bool fl_load_config(const char * configName)
 {
 	//check is the file exist;
@@ -179,6 +219,8 @@ bool fl_load_config(const char * configName)
 			fclose(cf);
 			return false;
 		}
+
+		s_ParseValue(value);
 
 		if ('@' == key[0])
 		{

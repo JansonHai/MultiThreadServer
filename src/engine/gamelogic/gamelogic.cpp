@@ -8,12 +8,14 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <lua.hpp>
+#include "envirment.h"
 #include "ByteArray.h"
 #include "MsgQueue.h"
 #include "gamelogic.h"
 
 
 static void * s_work_thread(void * arg);
+static void * s_lua_thread(void * arg);
 static int s_run_state = 0;
 
 static class MsgQueue<struct fl_gamelogic_ctx *> s_work_msg_queue;
@@ -56,8 +58,17 @@ void fl_start_gamelogic()
 		pthread_create(&tid, &attr, s_work_thread, (void*)(&s_work_id[i]));
 	}
 
+	pthread_create(&tid, &attr, s_lua_thread, NULL);
+
+}
+
+static void * s_lua_thread(void * arg)
+{
 	Lua = luaL_newstate();
 	luaL_openlibs(Lua);
+	luaL_loadfile(Lua, fl_getenv("lua_main"));
+	lua_close(Lua);
+	pthread_exit(0);
 }
 
 void fl_stop_gamelogic()
@@ -75,8 +86,6 @@ void fl_stop_gamelogic()
 		pthread_mutex_destroy(&s_work_thread_lock[i]);
 		pthread_cond_destroy(&s_work_cond_lock[i]);
 	}
-
-	lua_close(Lua);
 }
 
 void fl_dispatch_message(class fl_connection * conn, struct fl_message_data * message)
