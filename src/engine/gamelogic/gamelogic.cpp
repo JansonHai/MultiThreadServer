@@ -7,9 +7,15 @@
 #include <pthread.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-#include <lua.hpp>
+#include "ByteArray.h"
 #include "MsgQueue.h"
 #include "gamelogic.h"
+
+extern "C" {
+	#include "lua.h"
+	#include "lualib.h"
+	#include "lauxlib.h"
+}
 
 static void * s_work_thread(void * arg);
 static int s_run_state = 0;
