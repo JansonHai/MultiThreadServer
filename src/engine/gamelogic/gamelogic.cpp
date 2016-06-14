@@ -7,21 +7,10 @@
 #include <pthread.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <lua.hpp>
 #include "ByteArray.h"
 #include "MsgQueue.h"
 #include "gamelogic.h"
-
-#ifdef __cplusplus
-extern "C" {
-#include "lua.h"
-#include "lauxlib.h"
-#include "lualib.h"
-}
-#else
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-#endif
 
 
 static void * s_work_thread(void * arg);
@@ -40,6 +29,17 @@ static bool s_work_thread_busy[WORK_THREAD_NUM];
 static int s_work_id[WORK_THREAD_NUM];
 
 static lua_State * Lua;
+
+extern "C" void s_start_lua()
+{
+	Lua = luaL_newstate();
+	luaL_openlibs(Lua);
+}
+
+extern "C" void s_stop_lua()
+{
+	lua_close(Lua);
+}
 
 void fl_start_gamelogic()
 {
@@ -67,8 +67,7 @@ void fl_start_gamelogic()
 		pthread_create(&tid, &attr, s_work_thread, (void*)(&s_work_id[i]));
 	}
 
-	Lua = luaL_newstate();
-	luaL_openlibs(Lua);
+	s_start_lua();
 }
 
 void fl_stop_gamelogic()
@@ -86,7 +85,7 @@ void fl_stop_gamelogic()
 		pthread_mutex_destroy(&s_work_thread_lock[i]);
 		pthread_cond_destroy(&s_work_cond_lock[i]);
 	}
-	lua_close(Lua);
+	s_stop_lua();
 }
 
 void fl_dispatch_message(class fl_connection * conn, struct fl_message_data * message)
