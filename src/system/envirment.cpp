@@ -110,7 +110,7 @@ static void s_ParseValue(char * value)
 			key[j++] = '\0';
 			if (')' == *ch) ++ch;
 			str = fl_getenv(key);
-			while (NULL != str && *str != '/0')
+			while (NULL != str && *str != '\0')
 			{
 				val[i++] = *str;
 				++str;
