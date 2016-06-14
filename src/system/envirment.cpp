@@ -93,7 +93,7 @@ static void s_ParseValue(char * value)
 	char key[1024];
 	strcpy(tmp,value);
 	const char * str;
-	char * ch;
+	char * ch = value;
 	int i,j;
 	i = 0;
 	while (*ch != '\0')
