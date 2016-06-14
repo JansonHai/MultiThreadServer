@@ -239,7 +239,7 @@
 
 #else				/* }{ */
 
-#define LUA_API		extern "C"
+#define LUA_API		extern
 
 #endif				/* } */
 
