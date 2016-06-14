@@ -30,17 +30,6 @@ static int s_work_id[WORK_THREAD_NUM];
 
 static lua_State * Lua;
 
-extern "C" void s_start_lua()
-{
-	Lua = luaL_newstate();
-	luaL_openlibs(Lua);
-}
-
-extern "C" void s_stop_lua()
-{
-	lua_close(Lua);
-}
-
 void fl_start_gamelogic()
 {
 	pthread_mutex_init(&s_dispatch_message_lock, NULL);
@@ -67,7 +56,8 @@ void fl_start_gamelogic()
 		pthread_create(&tid, &attr, s_work_thread, (void*)(&s_work_id[i]));
 	}
 
-	s_start_lua();
+	Lua = luaL_newstate();
+	luaL_openlibs(Lua);
 }
 
 void fl_stop_gamelogic()
@@ -85,7 +75,8 @@ void fl_stop_gamelogic()
 		pthread_mutex_destroy(&s_work_thread_lock[i]);
 		pthread_cond_destroy(&s_work_cond_lock[i]);
 	}
-	s_stop_lua();
+
+	lua_close(Lua);
 }
 
 void fl_dispatch_message(class fl_connection * conn, struct fl_message_data * message)
