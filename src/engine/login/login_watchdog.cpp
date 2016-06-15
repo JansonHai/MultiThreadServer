@@ -90,7 +90,7 @@ bool fl_start_login_watchdog_server()
 
 void fl_stop_login_watchdog_server()
 {
-	fl_debug_log("[Login]: Stoping Login watchdog Server\n");
+	fl_debug_log("[Login]: Stoping Login watchdog Server");
 	close(s_watchdog_listen_fd);
 	s_run_state = 0;
 	for (int i=0;i<32;++i)
@@ -160,7 +160,7 @@ static void * s_watchdog_thread(void * arg)
 					{
 						session = 0;
 					}
-					fl_debug_log(0,"[Login_Watchdog]: Accept client from %s:%d, clientfd = %d\n",inet_ntoa(client_addr.sin_addr),ntohs(client_addr.sin_port),clientfd);
+					fl_debug_log(0,"[Login_Watchdog]: Accept client from %s:%d, clientfd = %d",inet_ntoa(client_addr.sin_addr),ntohs(client_addr.sin_port),clientfd);
 					break;
 				}
 			}
@@ -175,7 +175,7 @@ static void * s_watchdog_thread(void * arg)
 				if (clientfd == s_backgate_connections[i].GetSockfd()) continue;
 				if (FD_ISSET(s_backgate_connections[i].GetSockfd(), &readset))
 				{
-					fl_debug_log("[Login_Watchdog]: client %d receiveing message\n",s_backgate_connections[i].GetSockfd());
+					fl_debug_log("[Login_Watchdog]: client %d receiveing message",s_backgate_connections[i].GetSockfd());
 					if (false == s_backgate_connections[i].Recv())
 					{
 						s_backgate_connections[i].Close();
@@ -193,7 +193,7 @@ static void * s_watchdog_thread(void * arg)
 static std::vector<std::string> msg;
 static void s_watchdog_handle_message(struct fl_message_data * message)
 {
-	fl_debug_log("[Login_Watchdog]: client %d message handle,length = %d\n", message->fd, message->length);
+	fl_debug_log("[Login_Watchdog]: client %d message handle,length = %d", message->fd, message->length);
 	ReadByteArray readByteArray;
 	readByteArray.SetReadContent(message->data, message->length);
 
@@ -204,7 +204,7 @@ static void s_watchdog_handle_message(struct fl_message_data * message)
 	fl_free_message_data(message);
 	msg.clear();
 	const char * ch = tmp.c_str();
-	fl_debug_log("[Login_Watchdog]: client %d Read message: %s\n", clientfd, tmp.c_str());
+	fl_debug_log("[Login_Watchdog]: client %d Read message: %s", clientfd, tmp.c_str());
 	while (*ch != '\0')
 	{
 		if (*ch == ',')
