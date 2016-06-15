@@ -42,8 +42,8 @@ void fl_logger_init()
 			DIR * dir = opendir(path);
 			if (NULL == dir)
 			{
-				fprintf(stdout,"mkdir -m 0644 -p %s\n",path);
-				sprintf(buf,"mkdir -m 0644 -p %s",path);
+				fprintf(stdout,"mkdir -m 0755 -p %s\n",path);
+				sprintf(buf,"mkdir -m 0755 -p %s",path);
 				system(buf);
 			}
 			else
