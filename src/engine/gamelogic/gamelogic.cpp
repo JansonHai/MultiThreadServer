@@ -66,7 +66,7 @@ static void * s_lua_thread(void * arg)
 {
 	Lua = luaL_newstate();
 	luaL_openlibs(Lua);
-	luaL_loadfile(Lua, fl_getenv("lua_main"));
+	luaL_dofile(Lua, fl_getenv("lua_main"));
 	lua_close(Lua);
 	pthread_exit(0);
 }
@@ -74,6 +74,10 @@ static void * s_lua_thread(void * arg)
 void fl_stop_gamelogic()
 {
 	s_run_state = 0;
+	for (int i=0;i<WORK_THREAD_NUM;++i)
+	{
+		pthread_cond_signal(&s_work_cond_lock[i]);
+	}
 	struct fl_gamelogic_ctx * ctx;
 	while (s_work_msg_queue.pop_message(ctx))
 	{
