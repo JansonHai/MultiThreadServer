@@ -15,7 +15,7 @@
 
 
 static void * s_work_thread(void * arg);
-static void * s_lua_thread(void * arg);
+//static void * s_lua_thread(void * arg);
 static int s_run_state = 0;
 
 static class MsgQueue<struct fl_gamelogic_ctx *> s_work_msg_queue;
@@ -30,7 +30,7 @@ static pthread_cond_t s_work_cond_lock[WORK_THREAD_NUM];
 static bool s_work_thread_busy[WORK_THREAD_NUM];
 static int s_work_id[WORK_THREAD_NUM];
 
-static lua_State * Lua;
+//static lua_State * Lua;
 
 void fl_start_gamelogic()
 {
@@ -58,23 +58,34 @@ void fl_start_gamelogic()
 		pthread_create(&tid, &attr, s_work_thread, (void*)(&s_work_id[i]));
 	}
 
-	pthread_create(&tid, &attr, s_lua_thread, NULL);
+//	 pthread_create(&tid, &attr, s_lua_thread, NULL);
 
 }
 
-static void * s_lua_thread(void * arg)
-{
-	Lua = luaL_newstate();
-	luaL_openlibs(Lua);
-	luaL_loadfile(Lua, fl_getenv("lua_main"));
-	lua_close(Lua);
-	pthread_exit(0);
-}
+//static void * s_lua_thread(void * arg)
+//{
+//	Lua = luaL_newstate();
+//	luaL_openlibs(Lua);
+//	int status = luaL_loadfile(Lua, fl_getenv("lua_main"));
+//	if (status != LUA_OK)
+//	{
+//		fl_log(2,"Can not load lua main file %s\n",fl_getenv("lua_main"));
+//	}
+//	else
+//	{
+//		lua_pcall(Lua, 0, LUA_MULTRET, 0);
+//	}
+//	pthread_exit(0);
+//}
 
 void fl_stop_gamelogic()
 {
 	s_run_state = 0;
 	struct fl_gamelogic_ctx * ctx;
+//	if (NULL != Lua)
+//	{
+//		lua_close(Lua);
+//	}
 	while (s_work_msg_queue.pop_message(ctx))
 	{
 		fl_free_message_data(ctx->message);
@@ -86,6 +97,7 @@ void fl_stop_gamelogic()
 		pthread_mutex_destroy(&s_work_thread_lock[i]);
 		pthread_cond_destroy(&s_work_cond_lock[i]);
 	}
+
 }
 
 void fl_dispatch_message(class fl_connection * conn, struct fl_message_data * message)
@@ -121,6 +133,19 @@ static void * s_work_thread(void * arg)
 	struct fl_message_data * message;
 	class fl_connection * conn;
 	ReadByteArray readByteArray;
+
+	lua_State * Lua = luaL_newstate();
+	luaL_openlibs(Lua);
+	int status = luaL_loadfile(Lua, fl_getenv("lua_main"));
+	if (status != LUA_OK)
+	{
+		fl_log(2,"Can not load lua main file %s\n",fl_getenv("lua_main"));
+	}
+	else
+	{
+		lua_pcall(Lua, 0, LUA_MULTRET, 0);
+	}
+
 	while (true)
 	{
 		if (0 == s_run_state) break;
@@ -150,5 +175,6 @@ static void * s_work_thread(void * arg)
 		fl_free_message_data(message);
 		message = NULL;
 	}
+	lua_close(Lua);
 	pthread_exit(0);
 }
