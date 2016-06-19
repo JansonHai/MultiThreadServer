@@ -79,7 +79,6 @@ void fl_start_gamelogic()
 //	pthread_exit(0);
 //}
 
-
 void fl_stop_gamelogic()
 {
 	s_run_state = 0;

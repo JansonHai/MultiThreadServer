@@ -283,7 +283,7 @@ static void * s_work_thread(void * arg)
 
 static void s_login_server_loop()
 {
-	int i;
+	int i,j;
 	int clientfd;
 	struct sockaddr_in client_addr;
 	socklen_t client_len = sizeof(struct sockaddr);
@@ -358,7 +358,11 @@ static void s_login_server_loop()
 			}
 			else
 			{
-				i = s_conn_bit_record.GetUnSetBitPosition();
+				i = rand() % MAX_CLIENT_CONNECTIONS;
+				j = 1;
+				while (-1 != s_connections[i].GetSockfd() && j <= MAX_CLIENT_CONNECTIONS) ++i, ++j;
+//				i = s_conn_bit_record.GetUnSetBitPosition();
+				if (j  > MAX_CLIENT_CONNECTIONS) i = -1;
 				if (-1 != i)
 				{
 					s_conn_bit_record.SetBit(i);
@@ -369,6 +373,10 @@ static void s_login_server_loop()
 					{
 						session = 0;
 					}
+				}
+				else
+				{
+					close(clientfd);
 				}
 			}
 			--selectn;
