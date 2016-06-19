@@ -42,8 +42,8 @@ void fl_logger_init()
 			DIR * dir = opendir(path);
 			if (NULL == dir)
 			{
-				fprintf(stdout,"mkdir -m 0644 -p %s\n",path);
-				sprintf(buf,"mkdir -m 0644 -p %s",path);
+				fprintf(stdout,"mkdir -m 0755 -p %s\n",path);
+				sprintf(buf,"mkdir -m 0755 -p %s",path);
 				system(buf);
 			}
 			else
@@ -134,12 +134,6 @@ void fl_debug_log(const char * msg, ...)
 	va_start(vlist, msg);
 	vsnprintf(vbuf, sizeof(vbuf), msg, vlist);
 	va_end(vlist);
-	int len = strlen(vbuf);
-	if ('\n' != vbuf[len-1])
-	{
-		vbuf[len++] = '\n';
-		vbuf[len++] = 0;
-	}
 	fl_log(8888,vbuf);
 }
 

@@ -39,7 +39,7 @@ static bool s_connect_to_gate_server();
 
 void fl_stop_login_server()
 {
-	fl_debug_log("[Login]: Stoping Login Server\n");
+	fl_debug_log("[Login]: Stoping Login Server");
 	if (-1 != s_listen_fd)
 	{
 		close(s_listen_fd);
