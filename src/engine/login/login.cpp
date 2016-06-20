@@ -358,10 +358,14 @@ static void s_login_server_loop()
 			}
 			else
 			{
+//				i = s_conn_bit_record.GetUnSetBitPosition();
 				i = rand() % MAX_CLIENT_CONNECTIONS;
 				j = 1;
-				while (-1 != s_connections[i].GetSockfd() && j <= MAX_CLIENT_CONNECTIONS) ++i, ++j;
-//				i = s_conn_bit_record.GetUnSetBitPosition();
+				while (-1 != s_connections[i].GetSockfd() && j <= MAX_CLIENT_CONNECTIONS)
+				{
+					++i, ++j;
+					if (i >= MAX_CLIENT_CONNECTIONS) i = 0;
+				}
 				if (j  > MAX_CLIENT_CONNECTIONS) i = -1;
 				if (-1 != i)
 				{

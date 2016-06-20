@@ -58,26 +58,7 @@ void fl_start_gamelogic()
 		pthread_create(&tid, &attr, s_work_thread, (void*)(&s_work_id[i]));
 	}
 
-//	 pthread_create(&tid, &attr, s_lua_thread, NULL);
-
 }
-
-
-//static void * s_lua_thread(void * arg)
-//{
-//	Lua = luaL_newstate();
-//	luaL_openlibs(Lua);
-//	int status = luaL_loadfile(Lua, fl_getenv("lua_main"));
-//	if (status != LUA_OK)
-//	{
-//		fl_log(2,"Can not load lua main file %s\n",fl_getenv("lua_main"));
-//	}
-//	else
-//	{
-//		lua_pcall(Lua, 0, LUA_MULTRET, 0);
-//	}
-//	pthread_exit(0);
-//}
 
 void fl_stop_gamelogic()
 {
@@ -87,10 +68,6 @@ void fl_stop_gamelogic()
 		pthread_cond_signal(&s_work_cond_lock[i]);
 	}
 	struct fl_gamelogic_ctx * ctx;
-//	if (NULL != Lua)
-//	{
-//		lua_close(Lua);
-//	}
 	while (s_work_msg_queue.pop_message(ctx))
 	{
 		fl_free_message_data(ctx->message);
@@ -146,10 +123,6 @@ static void * s_work_thread(void * arg)
 	{
 		fl_log(2,"Can not load lua main file %s\n",fl_getenv("lua_main"));
 	}
-	else
-	{
-		lua_pcall(Lua, 0, LUA_MULTRET, 0);
-	}
 
 	while (true)
 	{
@@ -180,6 +153,7 @@ static void * s_work_thread(void * arg)
 		fl_free_message_data(message);
 		message = NULL;
 	}
+
 	lua_close(Lua);
 	pthread_exit(0);
 }
