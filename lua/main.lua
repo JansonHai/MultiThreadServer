@@ -13,7 +13,6 @@ local function main()
 		else
 			message = table.remove(message_queue, 1);
 		end
-
 	end
 end
 
