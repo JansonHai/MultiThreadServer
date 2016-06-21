@@ -12,6 +12,7 @@
 #include "ByteArray.h"
 #include "MsgQueue.h"
 #include "gamelogic.h"
+#include "lua-handle.h"
 
 
 static void * s_work_thread(void * arg);
@@ -20,7 +21,7 @@ static int s_run_state = 0;
 
 static class MsgQueue<struct fl_gamelogic_ctx *> s_work_msg_queue;
 
-#define MAX_CTX_LENGTH 25600
+#define MAX_CTX_LENGTH 102400
 #define WORK_THREAD_NUM 4
 static struct fl_gamelogic_ctx * s_ctxs;
 static int s_ctx_pos = 0;
@@ -29,6 +30,7 @@ static pthread_mutex_t s_work_thread_lock[WORK_THREAD_NUM];
 static pthread_cond_t s_work_cond_lock[WORK_THREAD_NUM];
 static bool s_work_thread_busy[WORK_THREAD_NUM];
 static int s_work_id[WORK_THREAD_NUM];
+static bool s_work_script_reload_flag[WORK_THREAD_NUM];
 
 //static lua_State * Lua;
 
@@ -40,6 +42,7 @@ void fl_start_gamelogic()
 		pthread_mutex_init(&s_work_thread_lock[i], NULL);
 		pthread_cond_init(&s_work_cond_lock[i], NULL);
 		s_work_thread_busy[i] = false;
+		s_work_script_reload_flag[i] = false;
 	}
 
 	s_ctxs = (struct fl_gamelogic_ctx *)malloc(MAX_CTX_LENGTH * sizeof(struct fl_gamelogic_ctx));
@@ -85,11 +88,18 @@ void fl_stop_gamelogic()
 void fl_dispatch_message(class fl_connection * conn, struct fl_message_data * message)
 {
 	pthread_mutex_lock(&s_dispatch_message_lock);
-	struct fl_gamelogic_ctx * ctx = &s_ctxs[s_ctx_pos++];
-	if (s_ctx_pos >= MAX_CTX_LENGTH) s_ctx_pos = 0;
-	ctx->conn = conn;
-	ctx->message = message;
-	s_work_msg_queue.push_message(ctx);
+	if (s_work_msg_queue.Size() < MAX_CTX_LENGTH)
+	{
+		struct fl_gamelogic_ctx * ctx = &s_ctxs[s_ctx_pos++];
+		if (s_ctx_pos >= MAX_CTX_LENGTH) s_ctx_pos = 0;
+		ctx->conn = conn;
+		ctx->message = message;
+		s_work_msg_queue.push_message(ctx);
+	}
+	else
+	{
+		fl_free_message_data(message);
+	}
 	pthread_mutex_unlock(&s_dispatch_message_lock);
 
 	//wake up work thread
@@ -115,6 +125,8 @@ static void * s_work_thread(void * arg)
 	struct fl_message_data * message;
 	class fl_connection * conn;
 	ReadByteArray readByteArray;
+	int proto;
+	struct lua_ctx luactx;
 
 	lua_State * Lua = luaL_newstate();
 	luaL_openlibs(Lua);
@@ -127,6 +139,23 @@ static void * s_work_thread(void * arg)
 	while (true)
 	{
 		if (0 == s_run_state) break;
+		if (true == s_work_script_reload_flag[work_id])
+		{
+			s_work_script_reload_flag[work_id] = false;
+			lua_State * tmpLua = luaL_newstate();
+			luaL_openlibs(tmpLua);
+			int status = luaL_loadfile(tmpLua, fl_getenv("lua_main"));
+			if (status != LUA_OK)
+			{
+				fl_log(2,"Can not reload lua main file %s\n", fl_getenv("lua_main"));
+				lua_close(tmpLua);
+			}
+			else
+			{
+				lua_close(Lua);
+				Lua = tmpLua;
+			}
+		}
 		message = NULL;
 		result = s_work_msg_queue.pop_message(ctx);
 		if (false == result || NULL == ctx)
@@ -149,8 +178,18 @@ static void * s_work_thread(void * arg)
 
 		//handle
 		readByteArray.SetReadContent(message->data, message->length);
-		readByteArray.ReleaseBuffer();
 		fl_free_message_data(message);
+		proto = readByteArray.ReadInt32();
+		readByteArray.ResetReadPos();
+		if (0 != proto)
+		{
+			luactx.session = conn->GetSession();
+			luactx.proto = proto;
+			luactx.conn = ctx->conn;
+			luactx.readByteArray = &readByteArray;
+			fl_run_lua_handle(Lua, &luactx);
+		}
+		readByteArray.ReleaseBuffer();
 		message = NULL;
 	}
 
