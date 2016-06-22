@@ -124,13 +124,13 @@ static void * s_work_thread(void * arg)
 	struct fl_gamelogic_ctx * ctx;
 	struct fl_message_data * message;
 	class fl_connection * conn;
-	ReadByteArray readByteArray;
+	class ReadByteArray readByteArray;
 	int proto;
 	struct lua_ctx luactx;
 
 	lua_State * Lua = luaL_newstate();
 	luaL_openlibs(Lua);
-	int status = luaL_loadfile(Lua, fl_getenv("lua_main"));
+	int status = luaL_dofile(Lua, fl_getenv("lua_main"));
 	if (status != LUA_OK)
 	{
 		fl_log(2,"Can not load lua main file %s\n",fl_getenv("lua_main"));
