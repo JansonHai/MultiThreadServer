@@ -120,12 +120,12 @@ void fl_dispatch_message(class fl_connection * conn, struct fl_message_data * me
 static void * s_work_thread(void * arg)
 {
 	int work_id = *((int*)arg);
-	bool result;
-	struct fl_gamelogic_ctx * ctx;
-	struct fl_message_data * message;
-	class fl_connection * conn;
-	class ReadByteArray readByteArray;
-	int proto;
+	bool result = false;
+	struct fl_gamelogic_ctx * ctx = NULL;
+	struct fl_message_data * message = NULL;
+	class fl_connection * conn = NULL;
+	class ReadByteArray * readByteArray= NULL;
+	int proto = 0;
 	struct lua_ctx luactx;
 
 	lua_State * Lua = luaL_newstate();
@@ -177,19 +177,25 @@ static void * s_work_thread(void * arg)
 		}
 
 		//handle
-		readByteArray.SetReadContent(message->data, message->length);
+		readByteArray = new ReadByteArray();
+		if (NULL == readByteArray)
+		{
+			fl_free_message_data(message);
+			continue;
+		}
+		readByteArray->SetReadContent(message->data, message->length);
 		fl_free_message_data(message);
-		proto = readByteArray.ReadInt32();
-		readByteArray.ResetReadPos();
+		proto = readByteArray->ReadInt32();
+		readByteArray->ResetReadPos();
 		if (0 != proto)
 		{
 			luactx.session = conn->GetSession();
 			luactx.proto = proto;
 			luactx.conn = ctx->conn;
-			luactx.readByteArray = &readByteArray;
+			luactx.readByteArray = readByteArray;
 			fl_run_lua_handle(Lua, &luactx);
 		}
-		readByteArray.ReleaseBuffer();
+		readByteArray = NULL;
 		message = NULL;
 	}
 
