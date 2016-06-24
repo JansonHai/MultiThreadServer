@@ -15,7 +15,7 @@ struct fl_buffer_list
 static struct fl_buffer_list list_stack[9];
 static void s_real_free(struct fl_buffer * buffer);
 
-static pthread_mutex_t s_malloc_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t s_malloc_lock[9];
 
 void fl_init_buffer()
 {
@@ -30,6 +30,7 @@ void fl_init_buffer()
 
 	for (i=0;i<9;++i)
 	{
+		pthread_mutex_init(&s_malloc_lock[i], NULL);
 		n = fl_getenv(keyNames[i],defVals[i]);
 		size = 1 << (10 + i);
 		stack = &list_stack[i];
@@ -61,6 +62,42 @@ void fl_init_buffer()
 	}
 }
 
+void fl_destory_buffer()
+{
+	struct fl_buffer * buf;
+	struct fl_buffer * next;
+	for (int i=0;i<9;++i)
+	{
+		next = list_stack[i].next;
+		while (NULL != next)
+		{
+			buf = next;
+			next = next->next;
+			s_real_free(buf);
+		}
+		list_stack[i].next = NULL;
+		list_stack[i].num = 0;
+		pthread_mutex_destroy(&s_malloc_lock[i]);
+	}
+}
+
+void fl_gc_buffer()
+{
+	struct fl_buffer * buf;
+	for (int i=0;i<9;++i)
+	{
+		pthread_mutex_lock(&s_malloc_lock[i]);
+		while (list_stack[i].num > list_stack[i].config_num)
+		{
+			buf = list_stack[i].next;
+			list_stack[i].next = buf->next;
+			--list_stack[i].num;
+			s_real_free(buf);
+		}
+		pthread_mutex_unlock(&s_malloc_lock[i]);
+	}
+}
+
 struct fl_buffer * fl_malloc(int size)
 {
 	int fit_size = 0;
@@ -69,7 +106,7 @@ struct fl_buffer * fl_malloc(int size)
 	{
 		if (size <= list_stack[i].size)
 		{
-			pthread_mutex_lock(&s_malloc_lock);
+			pthread_mutex_lock(&s_malloc_lock[i]);
 			if (0 == fit_size) fit_size = list_stack[i].size;
 			if (list_stack[i].num > 0)
 			{
@@ -77,10 +114,10 @@ struct fl_buffer * fl_malloc(int size)
 				buf = list_stack[i].next;
 				list_stack[i].next = buf->next;
 				buf->next = NULL;
-				pthread_mutex_unlock(&s_malloc_lock);
+				pthread_mutex_unlock(&s_malloc_lock[i]);
 				return buf;
 			}
-			pthread_mutex_unlock(&s_malloc_lock);
+			pthread_mutex_unlock(&s_malloc_lock[i]);
 		}
 	}
 	if (0 != fit_size)
@@ -123,23 +160,34 @@ struct fl_buffer * fl_malloc(int size)
 
 struct fl_buffer * fl_realloc(struct fl_buffer * _prebuffer,int size)
 {
-	pthread_mutex_lock(&s_malloc_lock);
-	if (size <= _prebuffer->size) return NULL;
-	int fit_size = 0;
 	struct fl_buffer * buf = NULL;
+	if (NULL == _prebuffer)
+	{
+		buf = fl_malloc(size);
+		goto _return_buf;
+	}
+	if (size <= _prebuffer->size)
+	{
+		buf = NULL;
+		goto _return_buf;
+	}
+	int fit_size = 0;
 	for (int i=0;i<9;++i)
 	{
 		if (size <= list_stack[i].size)
 		{
 			if (0 == fit_size) fit_size = list_stack[i].size;
+			pthread_mutex_lock(&s_malloc_lock[i]);
 			if (list_stack[i].num > 0)
 			{
 				buf = list_stack[i].next;
 				list_stack[i].next = buf->next;
 				buf->next = NULL;
 				--list_stack[i].num;
+				pthread_mutex_unlock(&s_malloc_lock[i]);
 				break;
 			}
+			pthread_mutex_unlock(&s_malloc_lock[i]);
 		}
 	}
 	if (NULL != buf)
@@ -153,13 +201,15 @@ struct fl_buffer * fl_realloc(struct fl_buffer * _prebuffer,int size)
 		buf = (struct fl_buffer *)malloc(sizeof(struct fl_buffer));
 		if (NULL == buf)
 		{
-			goto _return_null;
+			buf = NULL;
+			goto _return_buf;
 		}
 		buf->buffer = (char *)malloc(fit_size * sizeof(char));
 		if (NULL == buf->buffer)
 		{
 			free(buf);
-			goto _return_null;
+			buf = NULL;
+			goto _return_buf;
 		}
 		buf->size = fit_size;
 		buf->next = NULL;
@@ -172,13 +222,15 @@ struct fl_buffer * fl_realloc(struct fl_buffer * _prebuffer,int size)
 		buf = (struct fl_buffer *)malloc(sizeof(struct fl_buffer));
 		if (NULL == buf)
 		{
-			goto _return_null;
+			buf = NULL;
+			goto _return_buf;
 		}
 		buf->buffer = (char *)malloc(size * sizeof(char));
 		if (NULL == buf->buffer)
 		{
 			free(buf);
-			goto _return_null;
+			buf = NULL;
+			goto _return_buf;
 		}
 		buf->size = size;
 		buf->next = NULL;
@@ -188,12 +240,7 @@ struct fl_buffer * fl_realloc(struct fl_buffer * _prebuffer,int size)
 	}
 
 	_return_buf:
-	pthread_mutex_unlock(&s_malloc_lock);
 	return buf;
-
-	_return_null:
-	pthread_mutex_unlock(&s_malloc_lock);
-	return NULL;
 }
 
 void fl_free(struct fl_buffer * buffer)
@@ -202,11 +249,11 @@ void fl_free(struct fl_buffer * buffer)
 	{
 		if (buffer->size == list_stack[i].size)
 		{
-			pthread_mutex_lock(&s_malloc_lock);
+			pthread_mutex_lock(&s_malloc_lock[i]);
 			buffer->next = list_stack[i].next;
 			list_stack[i].next = buffer;
 			++list_stack[i].num;
-			pthread_mutex_unlock(&s_malloc_lock);
+			pthread_mutex_unlock(&s_malloc_lock[i]);
 			return;
 		}
 	}

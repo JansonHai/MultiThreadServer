@@ -6,6 +6,8 @@
 #include "logger.h"
 #include "buffer.h"
 
+#define CHECK_BUFFER if (NULL == m_buffer) InitBuffer(2048);
+
 union _Int16
 {
 	char byte[2];
@@ -89,7 +91,14 @@ WriteByteArray::~WriteByteArray()
 
 void WriteByteArray::InitBuffer(int size)
 {
-	m_buffer = fl_malloc(size);
+	if (NULL == m_buffer)
+	{
+		m_buffer = fl_malloc(size);
+	}
+	else
+	{
+		m_buffer = fl_realloc(m_buffer, size);
+	}
 	m_size = 0;
 }
 
@@ -124,6 +133,7 @@ void WriteByteArray::ResetWrite()
 
 void WriteByteArray::WriteSeek(int pos)
 {
+	CHECK_BUFFER
 	if (pos <= m_buffer->size)
 	{
 		m_size = pos;
@@ -132,6 +142,7 @@ void WriteByteArray::WriteSeek(int pos)
 
 bool WriteByteArray::WriteInt8(char i8)
 {
+	CHECK_BUFFER
 	if (m_size + 1 > m_buffer->size)
 	{
 		struct fl_buffer * tmp = fl_realloc(m_buffer,m_buffer->size << 1);
@@ -148,6 +159,7 @@ bool WriteByteArray::WriteInt8(char i8)
 
 bool WriteByteArray::WriteInt16(int16_t i16)
 {
+	CHECK_BUFFER
 	if (m_size + 2 > m_buffer->size)
 	{
 		struct fl_buffer * tmp = fl_realloc(m_buffer,m_buffer->size << 1);
@@ -175,6 +187,7 @@ bool WriteByteArray::WriteInt16(int16_t i16)
 
 bool WriteByteArray::WriteInt32(int32_t i32)
 {
+	CHECK_BUFFER
 	if (m_size + 4 > m_buffer->size)
 	{
 		struct fl_buffer * tmp = fl_realloc(m_buffer,m_buffer->size << 1);
@@ -211,6 +224,7 @@ bool WriteByteArray::WriteInt32(int32_t i32)
 
 bool WriteByteArray::WriteInt64(int64_t i64)
 {
+	CHECK_BUFFER
 	if (m_size + 8 > m_buffer->size)
 	{
 		struct fl_buffer * tmp = fl_realloc(m_buffer,m_buffer->size << 1);
@@ -250,6 +264,7 @@ bool WriteByteArray::WriteInt64(int64_t i64)
 
 bool WriteByteArray::WriteUInt8(unsigned char ui8)
 {
+	CHECK_BUFFER
 	if (m_size + 1 > m_buffer->size)
 	{
 		struct fl_buffer * tmp = fl_realloc(m_buffer,m_buffer->size << 1);
@@ -266,6 +281,7 @@ bool WriteByteArray::WriteUInt8(unsigned char ui8)
 
 bool WriteByteArray::WriteUInt16(uint16_t ui16)
 {
+	CHECK_BUFFER
 	if (m_size + 2 > m_buffer->size)
 	{
 		struct fl_buffer * tmp = fl_realloc(m_buffer,m_buffer->size << 1);
@@ -293,6 +309,7 @@ bool WriteByteArray::WriteUInt16(uint16_t ui16)
 
 bool WriteByteArray::WriteUInt32(uint32_t ui32)
 {
+	CHECK_BUFFER
 	if (m_size + 4 > m_buffer->size)
 	{
 		struct fl_buffer * tmp = fl_realloc(m_buffer,m_buffer->size << 1);
@@ -324,6 +341,7 @@ bool WriteByteArray::WriteUInt32(uint32_t ui32)
 
 bool WriteByteArray::WriteUInt64(uint64_t ui64)
 {
+	CHECK_BUFFER
 	if (m_size + 8 > m_buffer->size)
 	{
 		struct fl_buffer * tmp = fl_realloc(m_buffer,m_buffer->size << 1);
@@ -363,6 +381,7 @@ bool WriteByteArray::WriteUInt64(uint64_t ui64)
 
 bool WriteByteArray::WriteFloat(float f)
 {
+	CHECK_BUFFER
 	if (m_size + 4 > m_buffer->size)
 	{
 		struct fl_buffer * tmp = fl_realloc(m_buffer,m_buffer->size << 1);
@@ -394,6 +413,7 @@ bool WriteByteArray::WriteFloat(float f)
 
 bool WriteByteArray::WriteDouble(double d)
 {
+	CHECK_BUFFER
 	if (m_size + 8 > m_buffer->size)
 	{
 		struct fl_buffer * tmp = fl_realloc(m_buffer,m_buffer->size << 1);
@@ -433,6 +453,7 @@ bool WriteByteArray::WriteDouble(double d)
 
 bool WriteByteArray::WriteString(const char * str, int len)
 {
+	CHECK_BUFFER
 	if (m_size + len + 4 > m_buffer->size)
 	{
 		int size = m_buffer->size << 1;
