@@ -161,6 +161,7 @@ struct fl_buffer * fl_malloc(int size)
 struct fl_buffer * fl_realloc(struct fl_buffer * _prebuffer,int size)
 {
 	struct fl_buffer * buf = NULL;
+	int fit_size = 0;
 	if (NULL == _prebuffer)
 	{
 		buf = fl_malloc(size);
@@ -171,7 +172,6 @@ struct fl_buffer * fl_realloc(struct fl_buffer * _prebuffer,int size)
 		buf = NULL;
 		goto _return_buf;
 	}
-	int fit_size = 0;
 	for (int i=0;i<9;++i)
 	{
 		if (size <= list_stack[i].size)
