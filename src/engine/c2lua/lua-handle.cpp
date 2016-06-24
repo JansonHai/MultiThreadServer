@@ -4,13 +4,13 @@
 #include <lua.hpp>
 #include "lua-handle.h"
 
-static int c_cont (lua_State *L, int status, lua_KContext ctx)
+static int c_cont (struct lua_State *L, int status, struct lua_KContext ctx)
 {
 	return 0;
 }
 
 
-void fl_run_lua_handle(lua_State * Lua, struct lua_ctx * ctx)
+void fl_run_lua_handle(struct lua_State * Lua, struct lua_ctx * ctx)
 {
 	/* 使用 lua_pcallk，而不是lua_pcall */
 	lua_getglobal(Lua, "fl_handle_main");
