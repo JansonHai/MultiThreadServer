@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <lua.hpp>
+#include "logger.h"
 #include "envirment.h"
 #include "ByteArray.h"
 #include "MsgQueue.h"

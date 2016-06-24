@@ -4,7 +4,7 @@
 #include <lua.hpp>
 #include "lua-handle.h"
 
-static int c_cont (struct lua_State *L, int status, struct lua_KContext ctx)
+static int c_cont (struct lua_State *L, int status, lua_KContext ctx)
 {
 	return 0;
 }

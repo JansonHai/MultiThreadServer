@@ -8,7 +8,7 @@
 
 static int write_int8(struct lua_State * L)
 {
-	WriteByteArray * writeByteArray = (ReadByteArray *)lua_touserdata(L, -2);
+	WriteByteArray * writeByteArray = (WriteByteArray *)lua_touserdata(L, -2);
 	int8_t num = (int8_t)luaL_checkinteger(L, -1);
 	if (NULL != writeByteArray)
 	{
@@ -19,7 +19,7 @@ static int write_int8(struct lua_State * L)
 
 static int write_int16(struct lua_State * L)
 {
-	WriteByteArray * writeByteArray = (ReadByteArray *)lua_touserdata(L, -2);
+	WriteByteArray * writeByteArray = (WriteByteArray *)lua_touserdata(L, -2);
 	int16_t num = (int16_t)luaL_checkinteger(L, -1);
 	if (NULL != writeByteArray)
 	{
@@ -30,7 +30,7 @@ static int write_int16(struct lua_State * L)
 
 static int write_int32(struct lua_State * L)
 {
-	WriteByteArray * writeByteArray = (ReadByteArray *)lua_touserdata(L, -2);
+	WriteByteArray * writeByteArray = (WriteByteArray *)lua_touserdata(L, -2);
 	int32_t num = (int32_t)luaL_checkinteger(L, -1);
 	if (NULL != writeByteArray)
 	{
@@ -41,7 +41,7 @@ static int write_int32(struct lua_State * L)
 
 static int write_int64(struct lua_State * L)
 {
-	WriteByteArray * writeByteArray = (ReadByteArray *)lua_touserdata(L, -2);
+	WriteByteArray * writeByteArray = (WriteByteArray *)lua_touserdata(L, -2);
 	int64_t num = (int64_t)luaL_checkinteger(L, -1);
 	if (NULL != writeByteArray)
 	{
@@ -52,7 +52,7 @@ static int write_int64(struct lua_State * L)
 
 static int write_float(struct lua_State * L)
 {
-	WriteByteArray * writeByteArray = (ReadByteArray *)lua_touserdata(L, -2);
+	WriteByteArray * writeByteArray = (WriteByteArray *)lua_touserdata(L, -2);
 	float num = (float)luaL_checknumber(L, -1);
 	if (NULL != writeByteArray)
 	{
@@ -63,7 +63,7 @@ static int write_float(struct lua_State * L)
 
 static int write_double(struct lua_State * L)
 {
-	WriteByteArray * writeByteArray = (ReadByteArray *)lua_touserdata(L, -2);
+	WriteByteArray * writeByteArray = (WriteByteArray *)lua_touserdata(L, -2);
 	double num = (double)luaL_checknumber(L, -1);
 	if (NULL != writeByteArray)
 	{
@@ -74,7 +74,7 @@ static int write_double(struct lua_State * L)
 
 static int write_string(struct lua_State * L)
 {
-	WriteByteArray * writeByteArray = (ReadByteArray *)lua_touserdata(L, -2);
+	WriteByteArray * writeByteArray = (WriteByteArray *)lua_touserdata(L, -2);
 	size_t len = 0;
 	const char * str = luaL_checklstring(L, -1, &len);
 	if (NULL != writeByteArray)
@@ -93,7 +93,7 @@ static int new_data(struct lua_State * L)
 
 static int reset_data(struct lua_State * L)
 {
-	WriteByteArray * writeByteArray = (ReadByteArray *)lua_touserdata(L, -1);
+	WriteByteArray * writeByteArray = (WriteByteArray *)lua_touserdata(L, -1);
 	if (NULL != writeByteArray)
 	{
 		writeByteArray->ResetWrite();
@@ -103,7 +103,7 @@ static int reset_data(struct lua_State * L)
 
 static int release_data(struct lua_State * L)
 {
-	WriteByteArray * writeByteArray = (ReadByteArray *)lua_touserdata(L, -1);
+	WriteByteArray * writeByteArray = (WriteByteArray *)lua_touserdata(L, -1);
 	if (NULL != writeByteArray)
 	{
 		writeByteArray->ReleaseBuffer();
@@ -113,7 +113,7 @@ static int release_data(struct lua_State * L)
 
 static int destory_data(struct lua_State * L)
 {
-	WriteByteArray * writeByteArray = (ReadByteArray *)lua_touserdata(L, -1);
+	WriteByteArray * writeByteArray = (WriteByteArray *)lua_touserdata(L, -1);
 	if (NULL != writeByteArray)
 	{
 		delete writeByteArray;

@@ -12,6 +12,6 @@ struct lua_ctx
 };
 
 
-int fl_run_lua_handle(struct lua_State * Lua, struct lua_ctx * ctx);
+void fl_run_lua_handle(struct lua_State * Lua, struct lua_ctx * ctx);
 
 #endif /* SRC_HEADER_LUA_HANDLE_H_ */
