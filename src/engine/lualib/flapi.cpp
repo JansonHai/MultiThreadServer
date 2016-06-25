@@ -2,8 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <lua.hpp>
-#include "lua-api.h"
 #include "ByteArray.h"
+#include "lualib.h"
 
 //extern "C" int release_data(struct lua_State * L)
 //{

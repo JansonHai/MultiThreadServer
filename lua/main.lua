@@ -1,24 +1,16 @@
-local flLib = require("flLib");
-g_client_ctx = nil;
-g_client_proto = nil;
-g_client_message = nil;
-g_handle_table = {};
+local fldataread = require("fldataread");
+local proto = require("proto");
 
 function fl_handle_main(ctx, proto, message)
-	g_client_ctx = ctx;
-	g_client_proto = proto;
-	g_client_message = message;
-	if (nil != g_handle_table[proto])
-	{
-		handles = g_handle_table[proto];
+	handles = proto.get_proto2s_handle(proto);
+	if (nil != handles) then
 		for _, handle in ipairs(handles) do
-			flLib.resetMessagePos(message);
 			handle(ctx, proto, message);
 		end
-	}
-	g_client_ctx = nil;
-	g_client_proto = nil;
-	g_client_message = nil;
+	else
+		fldataread.release_data(message);
+	 	fldataread.destory_data(message);
+	end
 end
 
 
