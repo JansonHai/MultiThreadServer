@@ -8,4 +8,4 @@ function On10000(ctx, proto, message)
 	--xxoo
 end
 
-proto.set_proto2s_parse(10000, On10000);
+proto.add_proto2s_handle(10000, On10000);
