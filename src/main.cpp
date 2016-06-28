@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 #include <unistd.h>
 #include <errno.h>
 #include <time.h>
@@ -10,6 +11,7 @@
 #include "server.h"
 #include "logger.h"
 #include "envirment.h"
+#include "filetools.h"
 
 static void s_signal_handler(int s)
 {
@@ -30,6 +32,9 @@ int main(int argc, char* argv[])
 		fprintf(stderr,"need a config file,please use %s [configName]\n",argv[0]);
 		exit(0);
 	}
+
+	std::string pwd = FileTools::pwd();
+	printf("working path: %s\n",pwd.c_str());
 
 	if (false == fl_load_config(argv[1]))
 	{

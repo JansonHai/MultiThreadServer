@@ -5,25 +5,25 @@
 #include <string>
 #include <vector>
 
-//class FileTools
-//{
-//public:
-//	static std::string pwd();
-//	static int cd(const char * path);
-//	static std::string getext(const char * file);
-//	static bool isFile(const char * file);
-//	static bool isFileExist(const char * file);
-//	static bool isDir(const char * dir);
-//
-//	static std::vector<std::string> getdirs(const char * path);
-//	static void getdirs(const char * path,std::vector<std::string> &list);
-//
-//	static std::vector<std::string> getfiles(const char * path);
-//	static void getfiles(const char * path, std::vector<std::string> &list);
-//
-//	static std::vector<std::string> getdirall(const char * path);
-//	static void getdirall(const char * path, std::vector<std::string> &list);
-//};
+class FileTools
+{
+public:
+	static std::string pwd();
+	static int cd(const char * path);
+	static std::string getext(const char * file);
+	static bool isFile(const char * file);
+	static bool isFileExist(const char * file);
+	static bool isDir(const char * dir);
+
+	static std::vector<std::string> getdirs(const char * path);
+	static void getdirs(const char * path,std::vector<std::string> &list);
+
+	static std::vector<std::string> getfiles(const char * path);
+	static void getfiles(const char * path, std::vector<std::string> &list);
+
+	static std::vector<std::string> getdirall(const char * path);
+	static void getdirall(const char * path, std::vector<std::string> &list);
+};
 
 std::string fl_pwd();
 int fl_cd(const char * path);
