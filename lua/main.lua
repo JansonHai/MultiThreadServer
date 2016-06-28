@@ -1,13 +1,9 @@
-print("config.lua start");
+LUA_SCRIPT_ROOT = "./lua";
 dofile("./lua/config.lua");
-print("config.lua end");
-print("path=" .. package.path);
-print("cpath=" .. package.cpath);
 
-print("bootstrap.lua start")
+
 local bootstrap = require("module/bootstrap");
 bootstrap.init();
-print("bootstrap.lua end")
 
 local readArray = require("lib/readArray");
 local proto = require("lib/proto");
