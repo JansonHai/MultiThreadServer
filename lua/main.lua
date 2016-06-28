@@ -1,7 +1,9 @@
-local readArray = require("readArray");
-local proto = require("proto");
+dofile("config.lua")
 
 dofile("bootstrap.lua");
+
+local readArray = require("readArray");
+local proto = require("proto");
 
 function fl_handle_main(ctx, protoNum, message)
 	handles = proto.get_proto2s_handle(protoNum);
