@@ -1,4 +1,4 @@
-local proto = require("proto");
+local proto = require("lib/proto");
 
 function On10000(ctx, proto, message)
 	local parse = proto.get_proto2s_parse(10000);

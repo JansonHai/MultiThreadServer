@@ -1,12 +1,12 @@
-local fldataread = require("fldataread");
-local proto = require("fldataread");
+local readArray = require("lib/readArray");
+local proto = require("lib/proto");
 
 function Parse2s10000(message)
-	fldataread.reset_data(message);
-	proto = fldataread.read_int32(message);
+	readArray.reset_data(message);
+	proto = readArray.read_int32(message);
 	local data = {};
-	data.id = fldataread.read_int32(message);
-	data.name = fldataread.read_string(message);
+	data.id = readArray.read_int32(message);
+	data.name = readArray.read_string(message);
 	return data;
 end
 

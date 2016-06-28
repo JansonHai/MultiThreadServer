@@ -2,7 +2,7 @@ local filetools = require("fileTools");
 
 local function bootstrap(path, boot)
 	local subdirs = filetools.get_dirs(path);
-	if (0 != table.getn(subdirs)) then
+	if (0 ~= table.getn(subdirs)) then
 		for _,dirname in ipairs(subdirs) do
 			bootstrap(dirname, true);
 		end
