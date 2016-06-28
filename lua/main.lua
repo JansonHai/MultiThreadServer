@@ -5,7 +5,8 @@ print("path=" .. package.path);
 print("cpath=" .. package.cpath);
 
 print("bootstrap.lua start")
-dofile("module/bootstrap");
+local bootstrap = require("module/bootstrap");
+bootstrap.init();
 print("bootstrap.lua end")
 
 local readArray = require("lib/readArray");

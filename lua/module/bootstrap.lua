@@ -1,4 +1,5 @@
 local filetools = require("fileTools");
+local bootstrap = {};
 
 local function bootstrap(path, boot)
 	local subdirs = filetools.get_dirs(path);
@@ -13,4 +14,8 @@ local function bootstrap(path, boot)
 	end
 end
 
-bootstrap("module", false);
+function bootstrap.init()
+	bootstrap("module", false);
+end
+
+return bootstrap;
