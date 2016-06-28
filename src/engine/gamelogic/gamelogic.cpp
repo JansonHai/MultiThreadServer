@@ -134,6 +134,7 @@ static void * s_work_thread(void * arg)
 	int status = luaL_dofile(Lua, fl_getenv("lua_main"));
 	if (status != LUA_OK)
 	{
+		fl_log(2,"Lua Error: %s\n", lua_tostring(Lua, -1));
 		fl_log(2,"Can not load lua main file %s\n",fl_getenv("lua_main"));
 	}
 

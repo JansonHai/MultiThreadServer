@@ -1,6 +1,12 @@
-dofile("config.lua")
+print("config.lua start");
+dofile("./lua/config.lua");
+print("config.lua end");
+print("path=" .. package.path);
+print("cpath=" .. package.cpath);
 
-dofile("bootstrap.lua");
+print("bootstrap.lua start")
+dofile("./lua/bootstrap.lua");
+print("bootstrap.lua end")
 
 local readArray = require("readArray");
 local proto = require("proto");
