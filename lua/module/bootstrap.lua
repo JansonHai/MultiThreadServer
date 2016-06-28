@@ -1,4 +1,4 @@
-local filetools = require("fileTools");
+local filetools = require("lib/fileTools");
 local bootstrap = {};
 
 local function bootstrap(path, boot)
