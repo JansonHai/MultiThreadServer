@@ -34,7 +34,7 @@ std::string fl_getext(const char * file)
 		return std::string("");
 	}
 	char ext[128];
-	char * ch;
+	const char * ch;
 	int len = strlen(file);
 	ch = &file[len - 1];
 	while (len > 0 && *ch != '.')
@@ -303,7 +303,6 @@ std::vector<std::string> fl_getdirall(const char * dirpath)
 	}
 
 	struct dirent * dirinfo;
-	struct stat dirstat;
 	char realPath[4096];
 
 	while (NULL != (dirinfo = readdir(pDir)))
@@ -341,7 +340,6 @@ void fl_getdirall(const char * dirpath, std::vector<std::string> &list)
 	}
 
 	struct dirent * dirinfo;
-	struct stat dirstat;
 	char realPath[4096];
 
 	while (NULL != (dirinfo = readdir(pDir)))

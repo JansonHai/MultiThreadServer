@@ -39,7 +39,8 @@ static int getDirs(struct lua_State * L)
 	const char * path = luaL_tolstring(L,-1, NULL);
 	fl_getdirs(path, list);
 	lua_newtable(L);
-	for (int i=0;i<list.size();++i)
+	int len = (int)list.size();
+	for (int i=0;i<len;++i)
 	{
 		lua_pushnumber(L, i+1);    //key
 		lua_pushlstring(L, list[i].c_str(), list[i].size());  //value
@@ -54,7 +55,8 @@ static int getFiles(struct lua_State * L)
 	const char * path = luaL_tolstring(L,-1, NULL);
 	fl_getfiles(path, list);
 	lua_newtable(L);
-	for (int i=0;i<list.size();++i)
+	int len = (int)list.size();
+	for (int i=0;i<len;++i)
 	{
 		lua_pushnumber(L, i+1);    //key
 		lua_pushlstring(L, list[i].c_str(), list[i].size());  //value
@@ -69,7 +71,8 @@ static int getAll(struct lua_State * L)
 	const char * path = luaL_tolstring(L,-1, NULL);
 	fl_getdirall(path, list);
 	lua_newtable(L);
-	for (int i=0;i<list.size();++i)
+	int len = (int)list.size();
+	for (int i=0;i<len;++i)
 	{
 		lua_pushnumber(L, i+1);    //key
 		lua_pushlstring(L, list[i].c_str(), list[i].size());  //value
