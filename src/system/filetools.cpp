@@ -352,62 +352,62 @@ void fl_getdirall(const char * dirpath, std::vector<std::string> &list)
 }
 
 
-static std::string FileTools::pwd()
+std::string FileTools::pwd()
 {
 	return fl_pwd();
 }
 
-static int FileTools::cd(const char * path)
+int FileTools::cd(const char * path)
 {
 	return fl_cd(path);
 }
 
-static std::string FileTools::getext(const char * file)
+std::string FileTools::getext(const char * file)
 {
 	return fl_getext(file);
 }
 
-static bool FileTools::isFile(const char * file)
+bool FileTools::isFile(const char * file)
 {
 	return fl_isFile(file);
 }
 
-static bool FileTools::isFileExist(const char * file)
+bool FileTools::isFileExist(const char * file)
 {
 	return fl_isFileExist(file);
 }
 
-static bool FileTools::isDir(const char * dir)
+bool FileTools::isDir(const char * dir)
 {
 	return fl_isDir(dir);
 }
 
-static std::vector<std::string> FileTools::getdirs(const char * path)
+std::vector<std::string> FileTools::getdirs(const char * path)
 {
 	return fl_getdirs(path);
 }
 
-static void FileTools::getdirs(const char * path,std::vector<std::string> &list)
+void FileTools::getdirs(const char * path,std::vector<std::string> &list)
 {
 	fl_getdirs(path, list);
 }
 
-static std::vector<std::string> FileTools::getfiles(const char * path)
+std::vector<std::string> FileTools::getfiles(const char * path)
 {
 	return fl_getfiles(path);
 }
 
-static void FileTools::getfiles(const char * path, std::vector<std::string> &list)
+void FileTools::getfiles(const char * path, std::vector<std::string> &list)
 {
 	fl_getfiles(path, list);
 }
 
-static std::vector<std::string> FileTools::getdirall(const char * path)
+std::vector<std::string> FileTools::getdirall(const char * path)
 {
 	return fl_getdirall(path);
 }
 
-static void FileTools::getdirall(const char * path, std::vector<std::string> &list)
+void FileTools::getdirall(const char * path, std::vector<std::string> &list)
 {
 	fl_getdirall(path, list);
 }
