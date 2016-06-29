@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
+#include <vector>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -38,7 +40,7 @@ int main(int argc,char * argv[])
 
     int sockfd;
 	struct sockaddr_in server_addr;
-	char buf[MAXBUFLEN];
+	std::vector<std::string> cmd_list;
 
 	sockfd = socket(AF_INET,SOCK_STREAM,0);
 	if (-1 == sockfd)
@@ -63,19 +65,33 @@ int main(int argc,char * argv[])
 	conn.SetIndex(0);
 	conn.SetSocketInfo(sockfd,1);
 
-	char cmd[4096];
+	int i;
 
 	fl_init_buffer();
 	WriteByteArray wb;
 	wb.InitBuffer(2048);
 
+	cmd_list.push_back(std::string("reload_lua_script"));
+
+	int cmdSize = cmd_list.size();
+
 	while (true)
 	{
-		printf("Please input command:\n");
-		scanf("%s",cmd);
+		printf("Please input command id:\n");
+		for (i=0;i<cmdSize;++i)
+		{
+			printf("%d: %s\n",i,cmd_list[i].c_str());
+		}
+		scanf("%d",&i);
+		if (i > cmdSize - 1)
+		{
+			printf("Invalide command id\n");
+			continue;
+		}
 		wb.ResetWrite();
-		wb.WriteString(cmd,strlen(cmd));
+		wb.WriteString(cmd_list[i].c_str(), cmd_list[i].size());
 		conn.Send(wb.GetBuffer(),wb.GetArraySize());
+		printf("\n");
 	}
 
 	conn.Close();
