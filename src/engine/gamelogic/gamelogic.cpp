@@ -117,6 +117,18 @@ void fl_dispatch_message(class fl_connection * conn, struct fl_message_data * me
 	}
 }
 
+void fl_reload_lua_script()
+{
+	for (int i=0;i<WORK_THREAD_NUM;++i)
+	{
+		s_work_script_reload_flag[i] = true;
+		pthread_mutex_lock(&s_work_thread_lock[i]);
+		s_work_thread_busy[i] = true;
+		pthread_cond_signal(&s_work_cond_lock[i]);
+		pthread_mutex_unlock(&s_work_thread_lock[i]);
+	}
+}
+
 
 static void * s_work_thread(void * arg)
 {
@@ -146,9 +158,10 @@ static void * s_work_thread(void * arg)
 			s_work_script_reload_flag[work_id] = false;
 			lua_State * tmpLua = luaL_newstate();
 			luaL_openlibs(tmpLua);
-			int status = luaL_loadfile(tmpLua, fl_getenv("lua_main"));
+			int status = luaL_dofile(tmpLua, fl_getenv("lua_main"));
 			if (status != LUA_OK)
 			{
+				fl_log(2,"Lua Error: %s\n", lua_tostring(tmpLua, -1));
 				fl_log(2,"Can not reload lua main file %s\n", fl_getenv("lua_main"));
 				lua_close(tmpLua);
 			}

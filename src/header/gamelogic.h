@@ -12,6 +12,7 @@ struct fl_gamelogic_ctx
 void fl_start_gamelogic();
 void fl_stop_gamelogic();
 void fl_dispatch_message(class fl_connection * conn, struct fl_message_data * message);
+void fl_reload_lua_script();
 
 
 

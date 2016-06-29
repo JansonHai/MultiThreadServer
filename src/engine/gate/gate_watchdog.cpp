@@ -17,6 +17,7 @@
 #include "BitRecord.h"
 #include "MsgQueue.h"
 #include "envirment.h"
+#include "gamelogic.h"
 
 static void * s_watchdog_thread(void * arg);
 static void s_watchdog_handle_message(struct fl_message_data * message);
@@ -234,6 +235,11 @@ static void s_watchdog_handle_message(struct fl_message_data * message)
 		fl_log(1,"[Gate_Watchdog]: receive a shutdown command from client %d,the Gate Server will shutdown\n", clientfd);
 		fl_stop_net_gate_server();
 		fl_stop_net_gate_watchdog_server();
+	}
+	else if (msg[0] == "reload_lua_script")
+	{
+		fl_log(1,"[Gate_Watchdog]: receive a reload lua script command from client %d\n", clientfd);
+		fl_reload_lua_script();
 	}
 	else
 	{

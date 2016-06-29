@@ -33,10 +33,7 @@ server:
 	make -C $(OBJS_DIR)
 
 client:$(ROOT_DIR)/client_test/client.cpp
-	$(CC) $(CCFLAG) $(ROOT_DIR)/client_test/client.cpp -o $(BIN_DIR)/client
-	
-client2:$(ROOT_DIR)/client_test/client2.cpp
-	$(CC) $(CCFLAG) $(ROOT_DIR)/client_test/client2.cpp -o $(BIN_DIR)/client2
+	make -C client_test
 	
 clean:
 	rm -f $(OBJS_DIR)/*.o
