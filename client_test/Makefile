@@ -1,7 +1,7 @@
 CUR_OBJS = $(shell ls ../objs | grep .o$ | awk '{if ($$0 != "main.o") print $$0}')
 OBJS=${patsubst %.o, $(OBJS_DIR)/%.o, $(CUR_OBJS)}
 MY_LIB_A = 
-MY_LIB_SO = /usr/local/lib/liblua.so /usr/lib64/libmysqlclient.so
+MY_LIB_SO = /usr/local/lib/liblua.so /usr/lib/mysql/libmysqlclient.so
 
 all : client client2 gate_helper
 
