@@ -10,8 +10,8 @@ CUR_OBJS=${patsubst %.cpp, $(OBJS_DIR)/%.o, $(CUR_SOURCE)}
 
 #配置编译器跟编译器选项跟
 CC = g++
-CCFLAG = -I$(ROOT_DIR)/src/header/ -L/usr/lib64/mysql/ \
--fPIC -Wall -lpthread -lmysqlclient -llua -ldl -lm -g 
+CCFLAG = -I$(ROOT_DIR)/src/header/ -L/usr/lib/mysql -L/usr/lib -L/usr/lib64 \
+-fPIC -Wall -lpthread -pthread -lmysqlclient -llua -ldl -lm -g 
 
 export CC CCFLAG ROOT_DIR SUBDIRS OBJS_DIR BIN_DIR LIB_DIR
 
