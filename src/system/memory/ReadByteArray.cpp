@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string>
+#include <algorithm>
 #include <string.h>
 #include <stdint.h>
 #include <netinet/in.h>
@@ -409,11 +410,12 @@ std::string ReadByteArray::ReadString()
 	}
 	const char * buf = &m_buffer->buffer[m_cur_pos];
 	m_cur_pos += len;
-	if (s_is_big_endian())
+	std::string ret(buf, len);
+	if (!s_is_big_endian())
 	{
-		return std::string(buf, len);
+		std::reverse(ret.begin(), ret.end());
 	}
-	return ReverseStr(buf, len);
+	return ret;
 //	struct fl_buffer * tmp = fl_malloc(len + 1);
 //	memcpy(tmp->buffer, buf, len);
 //	tmp->buffer[len] = '\0';

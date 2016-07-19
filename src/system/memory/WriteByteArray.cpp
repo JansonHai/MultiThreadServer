@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
+#include <algorithm>
 #include <stdint.h>
 #include <netinet/in.h>
 #include "ByteArray.h"
@@ -452,21 +453,6 @@ bool WriteByteArray::WriteDouble(double d)
 	return true;
 }
 
-static std::string ReverseStr(const char * str, int len)
-{
-	std::string ss(str, len);
-	int size = len - 1;
-	int half = len / 2;
-	char ch;
-	for (int i=0;i<half;++i)
-	{
-		ch = ss[i];
-		ss[i] = ss[size - i];
-		ss[size - i] = ch;
-	}
-	return ss;
-}
-
 bool WriteByteArray::WriteString(const char * str, int len)
 {
 	CHECK_BUFFER
@@ -492,7 +478,8 @@ bool WriteByteArray::WriteString(const char * str, int len)
 		}
 		else
 		{
-			std::string ss = ReverseStr(str, len);
+			std::string ss(str, len);
+			std::reverse(ss.begin(), ss.end());
 			memcpy(m_buffer->buffer + m_size, ss.c_str(), len);
 			m_size += len;
 		}
