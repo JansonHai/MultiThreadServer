@@ -385,6 +385,21 @@ double ReadByteArray::ReadDouble()
 	return d.n;
 }
 
+static std::string ReverseStr(const char * str, int len)
+{
+	std::string ss(str, len);
+	int size = len - 1;
+	int half = len / 2;
+	char ch;
+	for (int i=0;i<half;++i)
+	{
+		ch = ss[i];
+		ss[i] = ss[size - i];
+		ss[size - i] = ch;
+	}
+	return ss;
+}
+
 std::string ReadByteArray::ReadString()
 {
 	int len = ReadInt32();
@@ -392,12 +407,17 @@ std::string ReadByteArray::ReadString()
 	{
 		return std::string("");
 	}
-	char * buf = &m_buffer->buffer[m_cur_pos];
+	const char * buf = &m_buffer->buffer[m_cur_pos];
 	m_cur_pos += len;
-	struct fl_buffer * tmp = fl_malloc(len + 1);
-	memcpy(tmp->buffer, buf, len);
-	tmp->buffer[len] = '\0';
-	std::string ret(tmp->buffer);
-	fl_free(tmp);
-	return ret;
+	if (s_is_big_endian())
+	{
+		return std::string(buf, len);
+	}
+	return ReverseStr(buf, len);
+//	struct fl_buffer * tmp = fl_malloc(len + 1);
+//	memcpy(tmp->buffer, buf, len);
+//	tmp->buffer[len] = '\0';
+//	std::string ret(tmp->buffer);
+//	fl_free(tmp);
+//	return ret;
 }
