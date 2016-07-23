@@ -386,21 +386,6 @@ double ReadByteArray::ReadDouble()
 	return d.n;
 }
 
-static std::string ReverseStr(const char * str, int len)
-{
-	std::string ss(str, len);
-	int size = len - 1;
-	int half = len / 2;
-	char ch;
-	for (int i=0;i<half;++i)
-	{
-		ch = ss[i];
-		ss[i] = ss[size - i];
-		ss[size - i] = ch;
-	}
-	return ss;
-}
-
 std::string ReadByteArray::ReadString()
 {
 	int len = ReadInt32();
