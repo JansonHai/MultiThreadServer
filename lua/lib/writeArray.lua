@@ -30,7 +30,7 @@ function writeByteArray.write_string(byteArray, str)
 end
 
 function writeByteArray.new_data()
-	fl_write_byte_lib.new_data();
+	return fl_write_byte_lib.new_data();
 end
 
 function writeByteArray.reset_data(byteArray)
